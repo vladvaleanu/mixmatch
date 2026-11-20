@@ -5,6 +5,8 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Corecția manuală a beat-urilor: `transitions.b_nudge_s` (±1 s, pozitiv = B mai târziu), aplicată în `b_start_s`; în editor: −½ beat, −10 ms, +10 ms, +½ beat, 0; rămâne la „Alege pentru mine” și la „Puncte automate” | Ales de utilizator: corecție după ureche acum, grila automată ca pas separat (8c) |
+| 2026-11-20 | Pas nou, 8c: grila de beat-uri automată (beat-uri locale, faza pe kick), validată de utilizator prin ascultare pe ~10 tranziții | Măsurătoarea automată pe perechi diferite nu e destul de sigură ca să valideze singură o corecție |
 | 2026-11-20 | Previzualizarea tranziției: backendul decupează cu ffmpeg doar fereastra necesară din A și din B (`GET /tracks/{id}/clip`, WAV 44,1 kHz); browserul le redă cu `AudioBufferSourceNode` (start exact la eșantion, `playbackRate` = viteză și ton) | Fără decodarea pieselor întregi în browser (~130 MB fiecare); același decodor ca exportul |
 | 2026-11-20 | Ecoul din plan = 6 copii întârziate (¾ de beat, fiecare cu 45 % din precedenta), `echo_taps` în plan, nu o buclă de feedback | ffmpeg (10a) poate reproduce exact o sumă de întârzieri, nu și bucla Web Audio |
 | 2026-11-20 | Planul include `bass_shelf_hz` (150 Hz) și fereastra de ascultat (4 bare înainte și după: `preview_start_s`, `preview_end_s`) | Tot ce se aude vine din plan |

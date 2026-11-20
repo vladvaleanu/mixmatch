@@ -503,6 +503,8 @@ export interface components {
             a_start_s: number;
             /** B Start S */
             b_start_s: number;
+            /** B Nudge S */
+            b_nudge_s: number;
             /** Speed B */
             speed_b: number;
             /** Gain A Db */
@@ -636,6 +638,8 @@ export interface components {
             a_out_s?: number | null;
             /** B In S */
             b_in_s?: number | null;
+            /** B Nudge S */
+            b_nudge_s?: number | null;
             /**
              * Reset Points
              * @default false

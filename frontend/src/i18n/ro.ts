@@ -227,6 +227,17 @@ export const ro = {
     later: (what: string) => `${what} cu o frază mai târziu`,
     automatic: 'automat',
     resetPoints: 'Puncte automate',
+    nudge: 'Potrivirea beat-urilor',
+    nudgeHint: 'Dacă loviturile nu cad împreună, mută B. Ascultă din nou după fiecare corecție.',
+    nudgeValue: (ms: number) =>
+      ms === 0
+        ? 'B: fără corecție'
+        : `B: ${ms > 0 ? '+' : '−'}${Math.abs(ms)} ms (${ms > 0 ? 'mai târziu' : 'mai devreme'})`,
+    nudgeHalfEarlier: 'B cu jumătate de beat mai devreme',
+    nudgeEarlier: 'B cu 10 ms mai devreme',
+    nudgeLater: 'B cu 10 ms mai târziu',
+    nudgeHalfLater: 'B cu jumătate de beat mai târziu',
+    nudgeReset: 'Fără corecție',
     auto: 'Alege aplicația pentru mine',
     listen: 'Ascultă tranziția',
     loading: 'Se pregătește…',

@@ -15,6 +15,7 @@ function plan(overrides: Partial<Plan> = {}): Plan {
     b_in_s: 0.5,
     a_start_s: 300,
     b_start_s: 0.5,
+    b_nudge_s: 0,
     speed_b: 0.98,
     gain_a_db: -6,
     gain_b_db: 0,

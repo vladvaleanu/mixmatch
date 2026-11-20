@@ -47,6 +47,7 @@ function transition(plan: object = {}) {
       b_in_s: 0.3,
       a_start_s: 290,
       b_start_s: 0.3,
+      b_nudge_s: 0,
       speed_b: 123 / 124,
       gain_a_db: -2,
       gain_b_db: 1,
@@ -149,6 +150,13 @@ describe('Editorul de tranziție', () => {
     );
     await waitFor(async () =>
       expect((await lastPatch(api)).a_out_s).toBeCloseTo(290 + 8 * (240 / 123), 3),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: ro.transitionEditor.nudgeLater }));
+    await waitFor(async () => expect(await lastPatch(api)).toEqual({ b_nudge_s: 0.01 }));
+    fireEvent.click(screen.getByRole('button', { name: ro.transitionEditor.nudgeHalfEarlier }));
+    await waitFor(async () =>
+      expect((await lastPatch(api)).b_nudge_s).toBeCloseTo(-(60 / 123) / 2, 3),
     );
 
     fireEvent.click(screen.getByRole('button', { name: ro.transitionEditor.auto }));

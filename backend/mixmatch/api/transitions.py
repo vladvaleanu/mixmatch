@@ -14,6 +14,7 @@ from mixmatch.music.compat import Label, Problem, TrackInfo, match
 from mixmatch.music.transition_plan import (
     DEFAULT_LENGTH,
     DEFAULT_STYLE,
+    MAX_NUDGE_S,
     Plan,
     Side,
     Style,
@@ -52,6 +53,7 @@ class PlanOut(BaseModel):
     b_in_s: float
     a_start_s: float
     b_start_s: float
+    b_nudge_s: float  # corecția manuală a lui B (pozitiv = mai târziu), deja în b_start_s
     speed_b: float
     gain_a_db: float
     gain_b_db: float
@@ -86,6 +88,8 @@ class TransitionPatch(BaseModel):
     style: Style | None = None
     a_out_s: float | None = Field(default=None, ge=0)
     b_in_s: float | None = Field(default=None, ge=0)
+    # Corecția manuală a lui B, în secunde (pozitiv = mai târziu); rămâne și la „auto”.
+    b_nudge_s: float | None = Field(default=None, ge=-MAX_NUDGE_S, le=MAX_NUDGE_S)
     reset_points: bool = False  # punctele revin la cele alese automat
     auto: bool = (
         False  # „Alege aplicația pentru mine”: lungime și stil după etichetă, puncte automate
@@ -131,6 +135,7 @@ def _out(session: Session, mix: Mix, position: int) -> TransitionOut:
         style=saved.style if saved else DEFAULT_STYLE,
         a_out_s=saved.a_out_s if saved else None,
         b_in_s=saved.b_in_s if saved else None,
+        b_nudge_s=saved.b_nudge_s if saved else 0.0,
     )
     result = match(info_a, info_b)
     previews = dict(
@@ -160,6 +165,7 @@ def _out(session: Session, mix: Mix, position: int) -> TransitionOut:
             b_in_s=plan.b_in_s,
             a_start_s=plan.a_start_s,
             b_start_s=plan.b_start_s,
+            b_nudge_s=plan.b_nudge_s,
             speed_b=plan.speed_b,
             gain_a_db=plan.gain_a_db,
             gain_b_db=plan.gain_b_db,
@@ -209,6 +215,7 @@ def update_transition(
             to_track_id=b.id,
             length_bars=DEFAULT_LENGTH,
             style=DEFAULT_STYLE,
+            b_nudge_s=0.0,
         )
         session.add(saved)
     if body.auto:
@@ -227,6 +234,8 @@ def update_transition(
             saved.a_out_s = body.a_out_s
         if body.b_in_s is not None:
             saved.b_in_s = body.b_in_s
+    if body.b_nudge_s is not None:
+        saved.b_nudge_s = body.b_nudge_s
     session.flush()
     out = _out(session, mix, position)
     # Se salvează valorile lipite de frază, ca un plan recitit să fie identic.

@@ -110,3 +110,20 @@ def test_errors(client: TestClient, ids: list[int]) -> None:
     assert client.get(f"/api/mixes/{mix_id}/transitions/0/plan").status_code == 404
     bad = client.patch(f"/api/mixes/{mix_id}/transitions/1", json={"length_bars": 12})
     assert bad.status_code == 422
+
+
+def test_nudge_is_saved_and_survives_auto(client: TestClient, ids: list[int]) -> None:
+    mix_id = mix_with(client, ids[:3])
+    base = client.get(f"/api/mixes/{mix_id}/transitions/1/plan").json()["plan"]
+    nudged = client.patch(f"/api/mixes/{mix_id}/transitions/1", json={"b_nudge_s": -0.03}).json()
+    assert nudged["plan"]["b_nudge_s"] == -0.03
+    assert nudged["plan"]["b_start_s"] == pytest.approx(
+        base["b_start_s"] + 0.03 * base["speed_b"], abs=1e-3
+    )
+    auto = client.patch(f"/api/mixes/{mix_id}/transitions/1", json={"auto": True}).json()
+    assert auto["plan"]["b_nudge_s"] == -0.03  # corecția ține de pereche, nu de stil
+    reset = client.patch(f"/api/mixes/{mix_id}/transitions/1", json={"reset_points": True}).json()
+    assert reset["plan"]["b_nudge_s"] == -0.03
+    assert (
+        client.patch(f"/api/mixes/{mix_id}/transitions/1", json={"b_nudge_s": 3}).status_code == 422
+    )

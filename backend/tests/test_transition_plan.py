@@ -135,3 +135,17 @@ def test_recommend(label: Label | None, expected: tuple[int, Style]) -> None:
 def test_half_tempo_partner() -> None:
     plan = build_plan(Side(87.0, 0.2, 240.0), Side(174.0, 0.1, 300.0))
     assert plan.speed_b == pytest.approx(1.0)
+
+
+def test_nudge_moves_b_later_or_earlier() -> None:
+    base = build_plan(A, B)
+    later = build_plan(A, B, b_nudge_s=0.02)
+    earlier = build_plan(A, B, b_nudge_s=-0.25)
+    # Mai târziu: la același t, B e cu 20 ms (la viteza ei) mai înapoi în fișier.
+    assert later.b_start_s == pytest.approx(base.b_start_s - 0.02 * base.speed_b, abs=1e-4)
+    assert earlier.b_start_s == pytest.approx(base.b_start_s + 0.25 * base.speed_b, abs=1e-4)
+    assert (later.b_nudge_s, later.b_in_s, later.a_out_s) == (0.02, base.b_in_s, base.a_out_s)
+
+
+def test_nudge_is_limited() -> None:
+    assert build_plan(A, B, b_nudge_s=5).b_nudge_s == 1.0

@@ -18,6 +18,8 @@ type Style = Schemas['PlanOut']['style'];
 const LENGTHS = [8, 16, 32, 64] as const;
 const STYLES: Style[] = ['eq_swap', 'crossfade', 'echo_out', 'cut'];
 const PHRASE_BARS = 8;
+const NUDGE_STEP_S = 0.01;
+const MAX_NUDGE_S = 1;
 
 const chipColors: Record<Label, CSSProperties> = {
   smooth: { background: color.accentSoftBg, color: color.accentSoftText },
@@ -98,6 +100,71 @@ function Chevron({ left = false }: { left?: boolean }) {
     >
       <path d={left ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
     </svg>
+  );
+}
+
+function NudgeControl({
+  nudgeS,
+  beatS,
+  onChange,
+}: {
+  nudgeS: number;
+  beatS: number;
+  onChange: (nudgeS: number) => void;
+}) {
+  const e = ro.transitionEditor;
+  const set = (value: number) =>
+    onChange(Math.round(Math.min(Math.max(value, -MAX_NUDGE_S), MAX_NUDGE_S) * 1000) / 1000);
+  const button: CSSProperties = {
+    flex: 1,
+    height: size.touch,
+    borderRadius: radius.buttonSm,
+    border: `1px solid ${color.borderStrong}`,
+    background: color.surface2,
+    color: color.text,
+    font: 'inherit',
+    fontSize: fontSize.meta,
+    cursor: 'pointer',
+  };
+  const steps: [string, string, number][] = [
+    ['−½', e.nudgeHalfEarlier, -beatS / 2],
+    ['−10', e.nudgeEarlier, -NUDGE_STEP_S],
+    ['+10', e.nudgeLater, NUDGE_STEP_S],
+    ['+½', e.nudgeHalfLater, beatS / 2],
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: space[8] }}>
+      <span style={{ color: color.textSoft }}>
+        <strong style={{ color: color.text, fontVariantNumeric: 'tabular-nums' }}>
+          {e.nudgeValue(Math.round(nudgeS * 1000))}
+        </strong>
+      </span>
+      <div role="group" aria-label={e.nudge} style={{ display: 'flex', gap: space[6] }}>
+        {steps.map(([text, label, delta]) => (
+          <button
+            key={label}
+            type="button"
+            aria-label={label}
+            onClick={() => set(nudgeS + delta)}
+            style={button}
+          >
+            {text}
+          </button>
+        ))}
+        <button
+          type="button"
+          aria-label={e.nudgeReset}
+          disabled={nudgeS === 0}
+          onClick={() => set(0)}
+          style={{ ...button, opacity: nudgeS === 0 ? 0.5 : 1 }}
+        >
+          0
+        </button>
+      </div>
+      <p style={{ margin: 0, color: color.textMuted, fontSize: fontSize.meta, lineHeight: 1.5 }}>
+        {e.nudgeHint}
+      </p>
+    </div>
   );
 }
 
@@ -286,6 +353,12 @@ export function TransitionScreen() {
             auto={plan.b_in_auto}
             barSeconds={barB}
             onChange={(s) => update.mutate({ b_in_s: s })}
+          />
+          <h2 style={{ ...h2, marginTop: space[8] }}>{e.nudge}</h2>
+          <NudgeControl
+            nudgeS={plan.b_nudge_s}
+            beatS={barA / 4}
+            onChange={(value) => update.mutate({ b_nudge_s: value })}
           />
           {!(plan.a_out_auto && plan.b_in_auto) && (
             <Button

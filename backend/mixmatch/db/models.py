@@ -189,3 +189,5 @@ class Transition(Base):
     style: Mapped[Style] = mapped_column(Enum(Style, native_enum=False, length=16))
     a_out_s: Mapped[float | None]
     b_in_s: Mapped[float | None]
+    # Corecția manuală a lui B (secunde, în timpul mixului): pozitiv = mai târziu.
+    b_nudge_s: Mapped[float] = mapped_column(default=0.0, server_default="0")

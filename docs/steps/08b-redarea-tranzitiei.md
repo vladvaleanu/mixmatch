@@ -44,14 +44,16 @@ Ce am aflat:
 - Măsurătoarea automată pe perechi diferite e ambiguă (modele de kick/bas diferite în intro/outro), deci
   nu poate valida singură o corecție. Am încercat beat-uri locale, corecție de fază pe kick și corecție de
   jumătate de beat: niciuna nu a dat rezultate clare.
-Decizia despre cum continuăm e la utilizator (vezi mesajul de la finalul pasului).
+Decizia utilizatorului: corecție manuală acum (`b_nudge_s`, butoanele „Potrivirea beat-urilor” din
+editor: −½ beat, −10 ms, +10 ms, +½ beat, 0), iar grila automată devine pasul 8c, validat prin
+ascultare. Pentru ascultare există în bază un mix de test („Test beatmatch — ascultă tranzițiile”).
 
 ## Decizii
 - Vezi primele intrări din `docs/decisions.md` (bucăți decupate de ffmpeg, ecoul multi-tap, fereastra în plan,
   decodarea analizei cu ffmpeg, „un singur lucru se aude”, fixture-ul comun).
 
 ## Cum testezi
-- `make lint && make test && make types` (243 de teste backend, 54 frontend).
+- `make lint && make test && make types` (246 de teste backend, 54 frontend).
 - `make dev` → un mix → o tranziție → „Ascultă tranziția”; schimbă stilul și ascultă din nou.
 
 ## Ce rămâne / atenție pentru pasul următor

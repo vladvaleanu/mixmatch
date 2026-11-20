@@ -267,6 +267,14 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
   redând doar fereastra tranziției.
 - **Gata când**: ce auzi e generat exclusiv din planul primit de la backend.
 
+### Pasul 8c — Grila de beat-uri
+- **Scop**: tranzițiile cad pe beat fără corecție manuală.
+- **Citește înainte**: `analysis/tempo.py`, `music/transition_plan.py`, nota pasului 8b (problema deschisă).
+- **Livrează**: beat-urile detectate păstrate pentru fiecare piesă (nu doar primul și BPM-ul); faza grilei pe kick
+  (nu pe contratimp); punctele de intrare/ieșire pe beat-uri reale și viteza lui B din tempo-ul local.
+- **Gata când**: pe un mix de test de ~10 tranziții, utilizatorul confirmă la ascultare că cele mai multe sunt
+  pe beat fără corecție; `b_nudge_s` rămâne pentru excepții.
+
 ### Pasul 9 — Ordonarea automată
 - **Scop**: butonul „Ordonează automat”.
 - **Citește înainte**: `music/compat.py`, `mixes/report.py`.

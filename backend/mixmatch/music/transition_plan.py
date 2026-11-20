@@ -12,7 +12,9 @@ Browserul (`frontend/src/audio/`) și ffmpeg (`export/`) execută același plan,
 - basul e un filtru low-shelf la `bass_shelf_hz`; ecoul e o sumă de copii întârziate
   (`echo_taps`: întârziere, volum), alimentată de A după filtru și înainte de volumul ei, și
   trimisă direct la ieșire (coada rămâne după ce A e oprită);
-- `preview_start_s` … `preview_end_s` e fereastra de ascultat (câteva bare înainte și după).
+- `preview_start_s` … `preview_end_s` e fereastra de ascultat (câteva bare înainte și după);
+- `b_nudge_s` mută B mai târziu (pozitiv) sau mai devreme (negativ) față de A, în timpul mixului:
+  corecția manuală când beat-urile nu cad împreună. E deja inclusă în `b_start_s`.
 """
 
 import math
@@ -51,6 +53,7 @@ ECHO_TAPS = 6  # repetări (0,45⁶ ≈ 0,8 %: restul nu se mai aude)
 ECHO_BEATS = 0.75  # întârzierea ecoului: trei sferturi de beat
 BASS_SHELF_HZ = 150.0
 PREVIEW_BARS = 4  # cât se aude înainte și după tranziție, la previzualizare
+MAX_NUDGE_S = 1.0  # corecția manuală a lui B, în ambele sensuri
 CROSSFADE_STEPS = 8  # puncte pentru curba de putere constantă
 
 
@@ -93,6 +96,7 @@ class Plan:
     b_in_s: float  # punctul din B care se aude primul (lipit de o frază)
     a_start_s: float  # de unde se redă A la t = 0 (= a_out_s)
     b_start_s: float  # de unde se redă B la t = 0 (poate fi negativ: B încă tace)
+    b_nudge_s: float  # corecția manuală, deja aplicată în b_start_s
     speed_b: float
     gain_a_db: float
     gain_b_db: float
@@ -215,9 +219,11 @@ def build_plan(
     style: Style = DEFAULT_STYLE,
     a_out_s: float | None = None,
     b_in_s: float | None = None,
+    b_nudge_s: float = 0.0,
 ) -> Plan:
     """Planul complet. `a_out_s` / `b_in_s` lipsă = puncte alese automat; date = lipite de frază."""
     speed = sync_speed(a.bpm, b.bpm)
+    nudge = round(min(max(b_nudge_s, -MAX_NUDGE_S), MAX_NUDGE_S), 4)
     b_in = snap_to_phrase(b_in_s, b) if b_in_s is not None else default_b_in(b)
     a_out = snap_to_phrase(a_out_s, a) if a_out_s is not None else default_a_out(a, length_bars)
     length = fit_length(length_bars, a, b, a_out, b_in)
@@ -232,7 +238,9 @@ def build_plan(
         a_out_s=a_out,
         b_in_s=b_in,
         a_start_s=a_out,
-        b_start_s=round(b_in - b_audible_at * speed, 3),
+        # B cântă cu `nudge` mai târziu: la t, poziția ei e cea de la t − nudge.
+        b_start_s=round(b_in - (b_audible_at + nudge) * speed, 4),
+        b_nudge_s=nudge,
         speed_b=round(speed, 5),
         gain_a_db=gain_db(a.loudness_lufs),
         gain_b_db=gain_db(b.loudness_lufs),
