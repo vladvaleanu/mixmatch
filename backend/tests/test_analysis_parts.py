@@ -63,7 +63,7 @@ def test_peaks_have_three_resolutions() -> None:
         LO_POINTS,
         HI_POINTS,
     )
-    assert max(peaks.lo) == 255  # normalizat la vârful piesei
+    assert max(peaks.lo) == 255  # normalizat la cel mai tare interval
     assert peaks.preview[0] < 40 < peaks.preview[-1]
 
 

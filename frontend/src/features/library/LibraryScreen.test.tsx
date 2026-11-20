@@ -7,6 +7,7 @@ import { Toast } from '../../ui/Toast';
 import { useToastStore } from '../../ui/toastStore';
 import { LibraryScreen } from './LibraryScreen';
 import { useAddFolderDialog } from './addFolderStore';
+import { useSelectedTrack } from './selectionStore';
 
 const track = {
   id: 1,
@@ -39,6 +40,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   useAddFolderDialog.setState({ open: false });
   useToastStore.setState({ message: null });
+  useSelectedTrack.setState({ id: null });
 });
 
 describe('LibraryScreen', () => {
@@ -76,6 +78,24 @@ describe('LibraryScreen', () => {
     fireEvent.click(screen.getByRole('radio', { name: ro.energy.set(5) }));
     await screen.findByRole('radiogroup', { name: ro.energy.label(3, false) });
     expect(patches).toEqual([{ energy_manual: 5 }, { energy_manual: null }]);
+  });
+
+  it('selectează o piesă și îi arată detaliile în panou', async () => {
+    mockApi({
+      ...noJobs,
+      'GET /api/tracks': () => [track],
+      'GET /api/tracks/1/waveform': () => ({ peaks: Array.from({ length: 1000 }, () => 128) }),
+    });
+    renderWithProviders(<LibraryScreen />);
+    expect(await screen.findByText(ro.panel.empty)).toBeTruthy();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Paper Lights' }));
+
+    expect(screen.getByText(ro.panel.selected)).toBeTruthy();
+    expect(screen.getByText('124 BPM')).toBeTruthy();
+    expect(screen.getByText('8A · La minor')).toBeTruthy();
+    expect(screen.getByText(ro.panel.bars(16, 32))).toBeTruthy();
+    expect(await screen.findByRole('slider', { name: ro.player.seek })).toBeTruthy();
   });
 
   it('marchează piesele neanalizate și arată progresul analizei', async () => {

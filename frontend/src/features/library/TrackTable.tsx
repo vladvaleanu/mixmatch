@@ -8,6 +8,8 @@ import { formatBpm, formatDuration } from '../../ui/format';
 import { EnergyDots } from '../../ui/EnergyDots';
 import { KeyPill } from '../../ui/KeyPill';
 import { Waveform } from '../../ui/Waveform';
+import { useSelectedTrack } from './selectionStore';
+import { TrackPlayButton } from './TrackPlayButton';
 
 type Track = Schemas['TrackOut'];
 type Props = { tracks: Track[] };
@@ -16,6 +18,13 @@ const cell = { padding: `${space[10]}px ${space[8]}px` } satisfies CSSProperties
 const firstCell = { ...cell, paddingLeft: space[16] } satisfies CSSProperties;
 const lastCell = { ...cell, paddingRight: space[16] } satisfies CSSProperties;
 const numeric = { fontVariantNumeric: 'tabular-nums' } satisfies CSSProperties;
+const visuallyHidden = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+} satisfies CSSProperties;
 
 const th = {
   ...cell,
@@ -38,6 +47,7 @@ function Pending() {
 
 export function TrackTable({ tracks }: Props) {
   const setEnergy = useSetEnergy();
+  const { id: selectedId, select } = useSelectedTrack();
   return (
     <div
       style={{
@@ -47,10 +57,13 @@ export function TrackTable({ tracks }: Props) {
         border: `1px solid ${color.border}`,
       }}
     >
-      <table style={{ width: '100%', minWidth: 820, borderCollapse: 'collapse' }}>
+      <table style={{ width: '100%', minWidth: 860, borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th scope="col" style={{ ...th, paddingLeft: space[16] }}>
+            <th scope="col" style={{ ...th, paddingLeft: space[16], width: 1 }}>
+              <span style={visuallyHidden}>{ro.library.columns.play}</span>
+            </th>
+            <th scope="col" style={th}>
               {ro.library.columns.track}
             </th>
             <th scope="col" style={{ ...th, width: 1 }}>
@@ -72,8 +85,20 @@ export function TrackTable({ tracks }: Props) {
         </thead>
         <tbody>
           {tracks.map((track) => (
-            <tr key={track.id} style={{ borderTop: `1px solid ${color.border}` }}>
+            <tr
+              key={track.id}
+              onClick={() => select(track.id)}
+              aria-selected={track.id === selectedId}
+              style={{
+                borderTop: `1px solid ${color.border}`,
+                background: track.id === selectedId ? color.surface3 : 'transparent',
+                cursor: 'pointer',
+              }}
+            >
               <td style={firstCell}>
+                <TrackPlayButton track={track} />
+              </td>
+              <td style={cell}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: space[12] }}>
                   <span
                     aria-hidden="true"
@@ -86,7 +111,17 @@ export function TrackTable({ tracks }: Props) {
                     }}
                   />
                   <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                    <span style={{ fontWeight: 500 }}>{track.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => select(track.id)}
+                      style={{
+                        all: 'unset',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {track.title}
+                    </button>
                     <span style={{ color: color.textMuted, fontSize: fontSize.meta }}>
                       {track.artist ?? ro.library.unknownArtist}
                     </span>

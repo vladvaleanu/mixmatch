@@ -5,6 +5,11 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Redarea folosește un singur element `<audio>` (streaming cu Range), legat printr-un `MediaElementAudioSourceNode` la un `AudioContext`; totul în `audio/engine.ts`, cu starea în store-ul `usePlayer` | O piesă întreagă decodată în memorie ar ocupa ~130 MB; elementul audio derulează imediat; contextul e pregătit pentru câștig și tranziții |
+| 2026-11-20 | AIFF se servește convertit o dată în FLAC (ffmpeg), în `data/cache/<file_hash>.flac`; restul formatelor se servesc direct, cu media type explicit | Chrome nu redă AIFF; FLAC e fără pierderi și suportă Range |
+| 2026-11-20 | Forma de undă = RMS pe interval, normalizat la cel mai tare interval (nu vârful); `analysis_version` = 3 | Cu vârful, masterele tari arătau ca un bloc plin; cu RMS se văd intro-ul, breakdown-urile și drop-urile |
+| 2026-11-20 | Panoul „Selectată” grupează cele 1000 de puncte în 72 de bare (maximul pe grup); click sau săgeți pe formă = derulare | Grupare doar pentru afișare; derularea e accesibilă și de la tastatură |
+| 2026-11-20 | Starea locală a interfeței (selecția, player-ul) folosește câmpuri `camelCase`; doar datele din API rămân `snake_case` | Regula `snake_case` e pentru câmpurile API |
 | 2026-11-20 | Pornirea unui job de analiză și decizia jobului de a se opri se iau sub același lock, pe baza unui indicator în proces (`_job_running`), nu a stării din `jobs` | Închide cursa în care piesele scanate chiar când analiza se termina rămâneau neanalizate (a făcut un test să pice o dată) |
 | 2026-11-20 | Energia: scor = medie ponderată a abaterilor standard pentru tărie (0,30), lovituri/s (0,25), centroid spectral (0,20) și BPM limitat la 90–150 (0,25); pragurile la cvintilele a 200 de piese din `~/Music` (constante în `analysis/energy.py`) | Pe folderele utilizatorului ordinea iese corectă: minimal house ~1,5, tech house ~3, hardgroove 4,4–4,8 |
 | 2026-11-20 | Tăria: `LoudnessEBUR128` pe semnalul stereo la rata originală; analiza citește audio o singură dată (`AudioLoader`), apoi îl face mono la 44,1 kHz | Tăria corectă pentru auto-gain; o singură citire a fișierului |

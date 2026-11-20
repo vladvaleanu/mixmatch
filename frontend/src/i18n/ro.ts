@@ -29,6 +29,24 @@ export const ro = {
       `Energie ${value} din 5${manual ? ' (corectată de tine; click pe ea ca să revii la automat)' : ''}`,
     set: (value: number) => `Setează energia ${value}`,
   },
+  player: {
+    play: (title: string) => `Ascultă ${title}`,
+    pause: (title: string) => `Pauză ${title}`,
+    error: 'Nu pot reda piesa. Verifică dacă fișierul mai există.',
+    seek: 'Derulează',
+  },
+  panel: {
+    selected: 'Selectată',
+    empty: 'Alege o piesă din tabel ca să-i vezi detaliile și s-o asculți.',
+    tempo: 'Tempo',
+    key: 'Tonalitate',
+    energy: 'Energie',
+    introOutro: 'Intro / Outro',
+    bpm: (bpm: string) => `${bpm} BPM`,
+    energyOf: (n: number) => `${n} din 5`,
+    bars: (intro: number, outro: number) => `${intro} / ${outro} bare`,
+    unknown: '—',
+  },
   analysis: {
     running: 'Analizez piesele: tempo și ton…',
     progressLabel: 'Progresul analizei',
@@ -43,6 +61,7 @@ export const ro = {
     loading: 'Se încarcă biblioteca…',
     empty: 'Încă nu ai piese. Adaugă un folder și le găsim noi.',
     columns: {
+      play: 'Ascultă',
       track: 'Piesă',
       bpm: 'BPM',
       key: 'Ton',

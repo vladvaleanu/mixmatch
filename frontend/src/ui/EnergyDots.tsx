@@ -47,7 +47,10 @@ export function EnergyDots({ value, manual, onChange }: Props) {
           role="radio"
           aria-checked={level === value}
           aria-label={ro.energy.set(level)}
-          onClick={() => onChange(manual && level === value ? null : level)}
+          onClick={(event) => {
+            event.stopPropagation(); // în tabel, corectura nu selectează și rândul
+            onChange(manual && level === value ? null : level);
+          }}
           style={{
             // Ținta de click e mai mare decât punctul.
             padding: `10px 2px`,

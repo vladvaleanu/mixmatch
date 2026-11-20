@@ -27,9 +27,14 @@ class Settings:
     min_duration_s: float = 60.0
     # Crește când se schimbă algoritmii de analiză: piesele analizate cu o versiune mai veche
     # se reanalizează automat.
-    analysis_version: int = 2  # 2: energie, tărie, formă de undă, intro/outro
+    analysis_version: int = 3  # 2: energie, tărie, formă de undă, intro/outro; 3: undă RMS
     # Câte piese se analizează în paralel (procese separate).
     analysis_workers: int = field(default_factory=lambda: max(1, min(6, (os.cpu_count() or 2) - 2)))
+
+    @property
+    def cache_dir(self) -> Path:
+        """Fișiere derivate, refăcute oricând (ex. AIFF convertite pentru browser)."""
+        return self.data_dir / "cache"
 
     @property
     def db_url(self) -> str:

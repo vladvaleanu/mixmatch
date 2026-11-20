@@ -5,6 +5,8 @@ import { ScreenHeader } from '../../ui/ScreenHeader';
 import { AddFolderDialog } from './AddFolderDialog';
 import { AnalysisBanner } from './AnalysisBanner';
 import { useAddFolderDialog } from './addFolderStore';
+import { useSelectedTrack } from './selectionStore';
+import { TrackPanel } from './TrackPanel';
 import { TrackTable } from './TrackTable';
 
 function FolderIcon() {
@@ -30,65 +32,88 @@ export function LibraryScreen() {
   const tracks = useTracks();
   const { open, setOpen } = useAddFolderDialog();
   const count = tracks.data?.length ?? 0;
+  const selectedId = useSelectedTrack((s) => s.id);
+  const selected = tracks.data?.find((track) => track.id === selectedId);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: space[20] }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', flex: 1 }}>
       <div
         style={{
+          flex: '999 1 560px',
+          minWidth: 0,
+          padding: space[28],
           display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          gap: space[12],
+          flexDirection: 'column',
+          gap: space[20],
         }}
       >
-        <ScreenHeader title={ro.library.title} subtitle={ro.library.subtitle} />
-        {tracks.data && (
-          <span
-            style={{
-              padding: `${space[8]}px ${space[12]}px`,
-              borderRadius: radius.round,
-              background: color.surface2,
-              color: color.textMuted,
-            }}
-          >
-            {ro.library.trackCount(count)}
-          </span>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: space[12],
+          }}
+        >
+          <ScreenHeader title={ro.library.title} subtitle={ro.library.subtitle} />
+          {tracks.data && (
+            <span
+              style={{
+                padding: `${space[8]}px ${space[12]}px`,
+                borderRadius: radius.round,
+                background: color.surface2,
+                color: color.textMuted,
+              }}
+            >
+              {ro.library.trackCount(count)}
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            border: `1.5px dashed ${color.borderDashed}`,
+            borderRadius: radius.card,
+            padding: `${space[18]}px ${space[20]}px`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: space[14],
+            background: 'transparent',
+            color: color.textMuted,
+            font: 'inherit',
+            textAlign: 'left',
+            cursor: 'pointer',
+          }}
+        >
+          <FolderIcon />
+          {ro.library.addFolderZone}
+        </button>
+
+        <AnalysisBanner />
+
+        {tracks.isPending ? (
+          <p style={{ margin: 0, color: color.textMuted }}>{ro.library.loading}</p>
+        ) : count === 0 ? (
+          <p style={{ margin: 0, color: color.textMuted }}>{ro.library.empty}</p>
+        ) : (
+          <TrackTable tracks={tracks.data ?? []} />
         )}
-      </div>
 
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
+        {open && <AddFolderDialog onClose={() => setOpen(false)} />}
+      </div>
+      <aside
         style={{
-          border: `1.5px dashed ${color.borderDashed}`,
-          borderRadius: radius.card,
-          padding: `${space[18]}px ${space[20]}px`,
-          display: 'flex',
-          alignItems: 'center',
-          gap: space[14],
-          background: 'transparent',
-          color: color.textMuted,
-          font: 'inherit',
-          textAlign: 'left',
-          cursor: 'pointer',
+          flex: '1 1 300px',
+          maxWidth: 380,
+          padding: `${space[28]}px ${space[24]}px`,
+          borderLeft: `1px solid ${color.border}`,
         }}
       >
-        <FolderIcon />
-        {ro.library.addFolderZone}
-      </button>
-
-      <AnalysisBanner />
-
-      {tracks.isPending ? (
-        <p style={{ margin: 0, color: color.textMuted }}>{ro.library.loading}</p>
-      ) : count === 0 ? (
-        <p style={{ margin: 0, color: color.textMuted }}>{ro.library.empty}</p>
-      ) : (
-        <TrackTable tracks={tracks.data ?? []} />
-      )}
-
-      {open && <AddFolderDialog onClose={() => setOpen(false)} />}
+        <TrackPanel track={selected} />
+      </aside>
     </div>
   );
 }

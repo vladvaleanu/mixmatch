@@ -1,4 +1,8 @@
-"""Vârfurile formei de undă, în trei rezoluții, ca octeți 0–255 (normalizați la vârful piesei)."""
+"""Forma de undă, în trei rezoluții, ca octeți 0–255.
+
+Fiecare punct e tăria RMS a intervalului, normalizată la cel mai tare interval. Vârful (maximul) ar
+arăta un bloc plin la masterele tari; RMS-ul arată intro-ul, breakdown-urile și drop-urile.
+"""
 
 from dataclasses import dataclass
 
@@ -16,19 +20,18 @@ class Peaks:
     hi: bytes
 
 
-def _peaks(mono: np.ndarray, points: int, top: float) -> bytes:
+def _levels(mono: np.ndarray, points: int) -> bytes:
     usable = len(mono) - len(mono) % points
     if usable == 0:
         return bytes(points)
-    bins = np.abs(mono[:usable]).reshape(points, -1).max(axis=1)
-    return np.round(np.clip(bins / top, 0, 1) * 255).astype(np.uint8).tobytes()
+    rms = np.sqrt(np.mean(mono[:usable].astype(np.float64).reshape(points, -1) ** 2, axis=1))
+    top = float(rms.max()) or 1.0
+    return np.round(np.clip(rms / top, 0, 1) * 255).astype(np.uint8).tobytes()
 
 
 def compute_peaks(mono: np.ndarray) -> Peaks:
-    top = float(np.max(np.abs(mono))) if len(mono) else 0.0
-    top = top or 1.0
     return Peaks(
-        preview=_peaks(mono, PREVIEW_POINTS, top),
-        lo=_peaks(mono, LO_POINTS, top),
-        hi=_peaks(mono, HI_POINTS, top),
+        preview=_levels(mono, PREVIEW_POINTS),
+        lo=_levels(mono, LO_POINTS),
+        hi=_levels(mono, HI_POINTS),
     )
