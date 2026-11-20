@@ -81,7 +81,12 @@ Trei coloane care se așază una sub alta pe ecrane înguste:
 - Stilul: radio cards (Schimb de bas, Crossfade simplu, Ieșire cu ecou, Tăietură pe beat), fiecare cu o explicație scurtă.
 - Butoanele „Ascultă tranziția” (principal) și „Alege aplicația pentru mine”.
 
-### 4. Exporturi (`features/exports/`)
+### 4. Mix-uri (`features/mix-builder/`)
+Nu are machetă. H1 „Mix-urile tale”, butonul principal „Mix nou”, apoi o grilă de carduri
+(`surface`, rază 14): numele mixului, „7 piese · 43 min”, data ultimei modificări. Click pe card
+deschide Constructorul. Stare goală: un card punctat (`borderDashed`) „Creează primul mix”.
+
+### 5. Exporturi (`features/exports/`)
 Nu are machetă. Se face în stilul celorlalte: listă de exporturi, progres, descărcare.
 
 ## Textul interfeței

@@ -5,6 +5,16 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Sincronizarea tempo-ului în tranziții: stil vinil (viteza și tonul se schimbă împreună), fără time-stretch. Raportul `bpm_A / bpm_B` intră în planul tranziției; browserul folosește `playbackRate`, ffmpeg `asetrate` + `aresample` | Ales de utilizator; previzualizarea și exportul sună identic, fără biblioteci de time-stretch |
+| 2026-11-20 | Setările unei tranziții sunt legate de perechea (from_track_id, to_track_id) din mix, nu de poziție | Ales de utilizator; o reordonare nu mută setări pe alte piese |
+| 2026-11-20 | Exportul din MVP: doar WAV/MP3, tracklist și .cue; Rekordbox XML și Serato după MVP | Ales de utilizator |
+| 2026-11-20 | Piesele de test pentru 3a: ~20 de piese din `~/Music`, cu BPM și ton din colecția Traktor 4 ca referință; în `test-tracks/` stă doar lista, nu copii ale fișierelor | Utilizatorul are ~2.000 de piese analizate în Traktor; acuratețea se măsoară ca acord cu Traktor |
+| 2026-11-20 | Formatele suportate: MP3, FLAC, WAV, AIFF și M4A | Ales de utilizator; ~600 de piese din bibliotecă sunt M4A |
+| 2026-11-20 | Scanarea ignoră fișierele sub 60 s (prag în `config.py`) | Ales de utilizator; `~/Music` are ~18.000 de sample-uri WAV |
+| 2026-11-20 | Ecranul Mix-uri: lista mixurilor ca carduri (nume, piese, durată, dată) + „Mix nou”; click deschide Constructorul | Ales de utilizator; nu exista machetă |
+| 2026-11-20 | Filtrul „Tonalitate” rămâne: `GET /tracks?key=8A&key=9A`, pe lângă `compatible_with` | Ales de utilizator; apare în macheta Biblioteca |
+| 2026-11-20 | Tabel nou `exports` (mix_id, job_id, format, path, duration_s, created_at) și rutele `GET /exports`, `GET /exports/{id}/file` | Ecranul Exporturi are nevoie de istoric; `jobs` nu păstrează fișierul rezultat |
+| 2026-11-20 | `GET /tracks` fără paginare în MVP | O bibliotecă de câteva mii de piese încape într-un răspuns; se revizuiește dacă tabelul devine lent |
 | 2026-11-20 | Makefile-ul folosește explicit `python3.12` (sau 3.13), nu `python3`; venv-ul stă în `backend/.venv` | Pe mașina utilizatorului `python3` e 3.11 |
 | 2026-11-20 | Dependențe backend pasul 0: fastapi, uvicorn[standard]; dev: pytest, httpx2 (cerut de TestClient-ul Starlette 1.x), ruff | Minimul pentru `/api/health` și unelte |
 | 2026-11-20 | Dependențe frontend pasul 0: React 18.3, react-router-dom 7, TanStack Query 5, @fontsource/inter și @fontsource/space-grotesk; dev: Vite 8, TypeScript 5.9, eslint 10 + typescript-eslint + react-hooks, prettier, Vitest 5 + jsdom + Testing Library, openapi-typescript 7 | TypeScript rămâne pe 5.9: typescript-eslint și openapi-typescript nu suportă încă TS 7 |

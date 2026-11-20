@@ -109,8 +109,9 @@ mixmatch/
 | `collections`, `collection_tracks` | id, name · collection_id, track_id | Colecțiile din bara laterală (pasul 11) |
 | `mixes` | id, name, energy_shape, created_at, updated_at | `energy_shape`: warmup, rise, wave, free |
 | `mix_items` | mix_id, position, track_id | Ordinea pieselor |
-| `transitions` | mix_id, from_position, length_bars, style, a_out_s, b_in_s | Dacă lipsește, se folosesc valori implicite calculate |
+| `transitions` | mix_id, from_track_id, to_track_id, length_bars, style, a_out_s, b_in_s | Legată de perechea A → B, nu de poziție: dacă perechea revine după o reordonare, setările revin. Dacă lipsește, se folosesc valori implicite calculate |
 | `jobs` | id, kind, status, progress, error, created_at | Scanare, analiză, export |
+| `exports` | id, mix_id, job_id, format, path, duration_s, created_at | Istoricul exporturilor pentru ecranul Exporturi (pasul 10b) |
 
 ### Contractul API (prefix `/api`)
 
@@ -119,18 +120,19 @@ mixmatch/
 | `GET /health` | Verificare | — |
 | `POST /library/folders` | Adaugă un folder și pornește scanarea | Biblioteca |
 | `GET /jobs/{id}` | Progresul unui job | Toate |
-| `GET /tracks` | Listă; filtre: bpm_min, bpm_max, energy, compatible_with, q, sort | Biblioteca |
+| `GET /tracks` | Listă; filtre: bpm_min, bpm_max, energy, key (unul sau mai multe coduri Camelot), compatible_with, q, sort | Biblioteca |
 | `PATCH /tracks/{id}` | Corecturi manuale (energy_manual) | Biblioteca |
 | `GET /tracks/{id}/audio` | Fișierul audio, cu suport pentru Range | Toate |
 | `GET /tracks/{id}/waveform?res=lo\|hi` | Vârfurile formei de undă | Biblioteca, Tranziție |
 | `GET /tracks/{id}/matches` | Piese compatibile, cu scor și motiv în cuvinte | Biblioteca, Constructor |
-| `GET/POST/PATCH/DELETE /mixes` | CRUD pentru mixuri | Constructor |
+| `GET/POST/PATCH/DELETE /mixes` | CRUD pentru mixuri; `GET /mixes` e lista (nume, număr de piese, durată, data) | Mix-uri, Constructor |
 | `PUT /mixes/{id}/items` | Salvează ordinea pieselor | Constructor |
 | `GET /mixes/{id}/report` | Eticheta fiecărei tranziții, curba de energie, avertismente | Constructor |
 | `POST /mixes/{id}/auto-order` | Propune o ordine (nu o salvează) | Constructor |
 | `GET /mixes/{id}/transitions/{pos}/plan` | Planul de automatizări al tranziției | Tranziție |
 | `PATCH /mixes/{id}/transitions/{pos}` | Lungime, stil, puncte de intrare și ieșire | Tranziție |
 | `POST /mixes/{id}/export` | Pornește randarea, întoarce un job | Exporturi |
+| `GET /exports`, `GET /exports/{id}/file` | Lista exporturilor și descărcarea | Exporturi |
 
 Importul în MVP înseamnă „adaugă un folder” (o cale de pe disc). Fișierele rămân unde
 sunt. Drag & drop-ul cu upload vine în pasul 11.
@@ -141,6 +143,9 @@ sunt. Drag & drop-ul cu upload vine în pasul 11.
   literă (ex. 8A → 7A, 9A; 12 → 1 face ocolul); aceeași cifră cu cealaltă literă (8A ↔ 8B).
   Diagonala (8A → 9B) contează ca „Bun”, nu „Lin”.
 - **Tempo**: diferența în procente. Contează și jumătate/dublu (ex. 87 ↔ 174).
+- **Sincronizarea tempo-ului în tranziție**: stil vinil. Piesa B se redă cu raportul
+  `bpm_A / bpm_B` (viteza și tonul se schimbă împreună), fără time-stretch. Raportul face parte
+  din planul tranziției; browserul îl aplică prin `playbackRate`, ffmpeg prin `asetrate` + `aresample`.
 - **Etichete tranziții**: Lin / Bun / Atenție. Pragurile exacte se stabilesc în pasul 5 și
   se trec în `docs/decisions.md`.
 - **Motivul în cuvinte**: fiecare scor vine cu un text scurt, de exemplu „8A → 9A · −1 BPM”.
@@ -187,7 +192,8 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 ### Pasul 2 — Scanarea bibliotecii
 - **Scop**: adaugi un folder și vezi piesele în tabel (titlu, artist, durată).
 - **Citește înainte**: `db/models.py`, `jobs.py`, `features/`, `ui/`.
-- **Livrează**: `library/scan.py`; `POST /library/folders`, `GET /jobs/{id}`, `GET /tracks`;
+- **Livrează**: `library/scan.py` (formate: MP3, FLAC, WAV, AIFF, M4A; fișierele sub 60 s se ignoră,
+  pragul e în `config.py`); `POST /library/folders`, `GET /jobs/{id}`, `GET /tracks`;
   primul `make types` și hook-urile din `api/`; ecranul Biblioteca cu tabelul și dialogul
   „Adaugă folder” cu progres.
 - **Gata când**: un folder cu 50 de piese apare complet, iar o rescanare nu creează duplicate.
@@ -229,7 +235,8 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 - **Scop**: creezi un mix, adaugi piese din bibliotecă, le reordonezi prin drag.
 - **Citește înainte**: `db/models.py`, `api/`, `features/library/`.
 - **Livrează**: tabelele `mixes` și `mix_items` (migrare), CRUD și `PUT /mixes/{id}/items`;
-  ecranul Constructorul de mix (cardurile, cu dnd-kit); „Adaugă în mix” din bibliotecă.
+  ecranul Mix-uri (lista de mixuri ca carduri, „Mix nou”); ecranul Constructorul de mix
+  (cardurile, cu dnd-kit); „Adaugă în mix” din bibliotecă.
 - **Gata când**: ordinea rămâne salvată după refresh.
 
 ### Pasul 7 — Raportul mixului
@@ -244,8 +251,8 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 - **Scop**: tranziția descrisă ca plan și ecranul în care o editezi.
 - **Citește înainte**: `analysis/` (beat grid, intro, outro), `mixes/report.py`, ecranul Constructor.
 - **Livrează**: tabelul `transitions` (migrare); `music/transition_plan.py` (lungime în bare aliniată
-  la fraze; stilurile eq_swap, crossfade, echo_out, cut; ieșirea e o listă de automatizări în
-  secunde, pentru volum, EQ de bas și ecou pe fiecare deck); `GET .../plan`, `PATCH .../transitions/{pos}`;
+  la fraze; stilurile eq_swap, crossfade, echo_out, cut; ieșirea e raportul de viteză al lui B plus o
+  listă de automatizări în secunde, pentru volum, EQ de bas și ecou pe fiecare deck); `GET .../plan`, `PATCH .../transitions/{pos}`;
   ecranul Tranziție (cele două forme de undă suprapuse, lungime, stil).
 - **Gata când**: când schimbi lungimea sau stilul, planul și desenul se actualizează.
 
@@ -268,14 +275,14 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 - **Scop**: mixul ca fișier WAV/MP3.
 - **Citește înainte**: `music/transition_plan.py`, `jobs.py`, `audio/engine.ts`.
 - **Livrează**: `export/render.py`: ffmpeg execută aceleași planuri (filtre volume, equalizer,
-  aecho, sincronizare tempo cu atempo/rubberband); `POST /mixes/{id}/export` ca job.
+  aecho, sincronizare tempo stil vinil cu asetrate + aresample); `POST /mixes/{id}/export` ca job.
 - **Gata când**: exportul sună la fel ca previzualizarea, verificat pe trei tranziții.
 
 ### Pasul 10b — Exportul: tracklist, .cue, ecranul
 - **Scop**: tracklistul cu timpi, fișierul .cue și ecranul Exporturi.
 - **Citește înainte**: `export/render.py`, `features/`.
-- **Livrează**: tracklistul (text), fișierul .cue, ecranul Exporturi (lista exporturilor, progresul,
-  descărcarea).
+- **Livrează**: tabelul `exports` (migrare); tracklistul (text), fișierul .cue; `GET /exports`,
+  `GET /exports/{id}/file`; ecranul Exporturi (lista exporturilor, progresul, descărcarea).
 - **Gata când**: timpii din tracklist corespund cu fișierul randat.
 
 ### Pasul 11 — Finisaje
@@ -285,9 +292,12 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 - **Gata când**: fiecare funcție are nota ei în `docs/steps/` și apare în cel puțin un ecran.
 
 ## 6. Decizii deschise
-- **Piesele de test** pentru pasul 3: 10–20 de piese cu tempo și ton cunoscute (de exemplu din
-  Rekordbox), puse în `test-tracks/` (care nu intră în git). Trebuie să fie gata înainte de pasul 3a.
-- **Formatele de export în afară de WAV/MP3** (Rekordbox XML, Serato). Decizia trebuie luată
-  înainte de pasul 10a.
+- **Piesele de test** (rezolvat): ~20 de piese din `~/Music`, alese din genuri diferite, cu BPM-ul
+  și tonul din colecția Traktor 4 a utilizatorului ca referință. Lista (cale, BPM, Camelot) stă
+  în `test-tracks/` (care nu intră în git); fișierele audio nu se copiază. Valorile Traktor sunt
+  tot o estimare, deci pasul 3a măsoară acordul cu Traktor (cu toleranță pentru jumătate/dublu la
+  tempo și pentru tonul relativ), nu adevărul absolut.
+- **Formatele de export** (rezolvat): doar audio (WAV/MP3), tracklist și .cue. Rekordbox XML și
+  Serato rămân după MVP.
 - **Licența Essentia (AGPL)**: pentru uz personal nu e o problemă. Se revizuiește doar dacă
   aplicația devine publică.
