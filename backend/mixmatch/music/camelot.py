@@ -63,3 +63,9 @@ def classic_name(code: str) -> str:
     """ "8A" → "La minor". Doar pentru afișare."""
     number, letter = parse(code)
     return (_MINOR_NAMES if letter == "A" else _MAJOR_NAMES)[number]
+
+
+def shift(code: str, semitones: int) -> str:
+    """Tonul după transpunere: un semiton în sus = 7 pași pe roată (aceeași literă)."""
+    number, letter = parse(code)
+    return f"{(number - 1 + 7 * semitones) % 12 + 1}{letter}"

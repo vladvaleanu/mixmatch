@@ -65,9 +65,9 @@ function HealthStatus() {
   );
 }
 
-type Props = { actions?: ReactNode };
+type Props = { search?: ReactNode; actions?: ReactNode };
 
-export function TopBar({ actions }: Props) {
+export function TopBar({ search, actions }: Props) {
   return (
     <header style={styles.header}>
       <div style={styles.logo}>
@@ -84,6 +84,7 @@ export function TopBar({ actions }: Props) {
           </NavLink>
         ))}
       </nav>
+      {search}
       <HealthStatus />
       {actions}
     </header>

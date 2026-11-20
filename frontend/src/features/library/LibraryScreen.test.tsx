@@ -7,6 +7,8 @@ import { Toast } from '../../ui/Toast';
 import { useToastStore } from '../../ui/toastStore';
 import { LibraryScreen } from './LibraryScreen';
 import { useAddFolderDialog } from './addFolderStore';
+import { emptyFilters, useFilters } from './filterStore';
+import { LibrarySearch } from './LibrarySearch';
 import { useSelectedTrack } from './selectionStore';
 
 const track = {
@@ -41,7 +43,15 @@ afterEach(() => {
   useAddFolderDialog.setState({ open: false });
   useToastStore.setState({ message: null });
   useSelectedTrack.setState({ id: null });
+  useFilters.setState({ filters: emptyFilters });
 });
+
+function lastQuery(api: ReturnType<typeof mockApi>, path = '/api/tracks'): URLSearchParams {
+  const urls = api.mock.calls
+    .map(([req]) => new URL((req as Request).url))
+    .filter((url) => url.pathname === path);
+  return urls[urls.length - 1]?.searchParams ?? new URLSearchParams();
+}
 
 describe('LibraryScreen', () => {
   it('arată piesele cu artist, BPM, ton și durată', async () => {
@@ -85,6 +95,7 @@ describe('LibraryScreen', () => {
       ...noJobs,
       'GET /api/tracks': () => [track],
       'GET /api/tracks/1/waveform': () => ({ peaks: Array.from({ length: 1000 }, () => 128) }),
+      'GET /api/tracks/1/matches': () => [],
     });
     renderWithProviders(<LibraryScreen />);
     expect(await screen.findByText(ro.panel.empty)).toBeTruthy();
@@ -96,6 +107,74 @@ describe('LibraryScreen', () => {
     expect(screen.getByText('8A · La minor')).toBeTruthy();
     expect(screen.getByText(ro.panel.bars(16, 32))).toBeTruthy();
     expect(await screen.findByRole('slider', { name: ro.player.seek })).toBeTruthy();
+  });
+
+  it('trimite filtrele la server și le poate șterge', async () => {
+    const api = mockApi({ ...noJobs, 'GET /api/tracks': () => [track] });
+    renderWithProviders(<LibraryScreen />);
+    await screen.findAllByText('Paper Lights');
+
+    fireEvent.click(screen.getByRole('button', { name: ro.filters.energyLevel(4) }));
+    fireEvent.change(screen.getByLabelText(ro.filters.bpmMin), { target: { value: '120,5' } });
+    fireEvent.click(screen.getByRole('button', { name: ro.filters.anyKey }));
+    fireEvent.click(screen.getByRole('button', { name: '8A' }));
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'bpm' } });
+
+    await waitFor(() => {
+      const query = lastQuery(api);
+      expect(query.getAll('energy')).toEqual(['4']);
+      expect(query.get('bpm_min')).toBe('120.5');
+      expect(query.getAll('key')).toEqual(['8A']);
+      expect(query.get('sort')).toBe('bpm');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: ro.filters.reset }));
+    await waitFor(() => expect(lastQuery(api).getAll('energy')).toEqual([]));
+    expect(lastQuery(api).get('sort')).toBe('bpm'); // sortarea rămâne
+  });
+
+  it('caută din bara de sus', async () => {
+    const api = mockApi({ ...noJobs, 'GET /api/tracks': () => [track] });
+    renderWithProviders(
+      <>
+        <LibrarySearch />
+        <LibraryScreen />
+      </>,
+      '/biblioteca',
+    );
+    fireEvent.change(screen.getByLabelText(ro.filters.search), { target: { value: 'paper' } });
+    await waitFor(() => expect(lastQuery(api).get('q')).toBe('paper'));
+  });
+
+  it('arată sugestiile și filtrează după compatibilitate', async () => {
+    const next = { ...track, id: 2, title: 'Slow Orbit', key_camelot: '9A', key_name: 'Mi minor' };
+    const api = mockApi({
+      ...noJobs,
+      'GET /api/tracks': () => [track, next],
+      'GET /api/tracks/1/waveform': () => ({ peaks: [] }),
+      'GET /api/tracks/1/matches': () => [
+        { track: next, label: 'smooth', score: 92, reason: '8A → 9A · −1 BPM' },
+      ],
+      'GET /api/tracks/2/waveform': () => ({ peaks: [] }),
+      'GET /api/tracks/2/matches': () => [],
+    });
+    renderWithProviders(<LibraryScreen />);
+
+    const compatible = await screen.findByRole('checkbox');
+    expect((compatible as HTMLInputElement).disabled).toBe(true);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Paper Lights' }));
+    expect(await screen.findByText('8A → 9A · −1 BPM')).toBeTruthy();
+    expect(screen.getByText(ro.transition.smooth)).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: ro.filters.compatibleWith('Paper Lights') }),
+    );
+    await waitFor(() => expect(lastQuery(api).get('compatible_with')).toBe('1'));
+
+    // Click pe o sugestie o selectează.
+    fireEvent.click(screen.getByRole('button', { name: /8A → 9A/ }));
+    expect(await screen.findByText('9A · Mi minor')).toBeTruthy();
   });
 
   it('marchează piesele neanalizate și arată progresul analizei', async () => {

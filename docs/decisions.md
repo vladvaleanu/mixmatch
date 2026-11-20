@@ -5,6 +5,14 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Ton (în `music/compat.py`), după transpunerea lui B: Lin = același ton, ±1 pe aceeași literă, relativul; Bun = diagonala (8A → 9B, 8B → 7A) și ±2 pe aceeași literă; restul = Atenție | Roata Camelot clasică; ±2 („energy boost”) se aude, dar merge |
+| 2026-11-20 | Transpunerea: semitonuri = round(12·log2(viteză)); sub ½ semiton (≈ 2,9 %) tonul rămâne același; un semiton = 7 pași pe roată | Cu sincronizarea stil vinil, ce se aude e tonul la viteza nouă |
+| 2026-11-20 | Energie între A și B: salt ≤ 1 = Lin, 2 = Bun, ≥ 3 = Atenție; fără energie la una din piese, nu contează | Saltul mare de energie se simte pe ringul de dans |
+| 2026-11-20 | Eticheta = cea mai slabă dintre ton, tempo și energie; scorul 0–100 = 0,50·ton + 0,35·tempo + 0,15·energie, doar pentru ordonarea sugestiilor | Eticheta e regula; scorul doar ordonează |
+| 2026-11-20 | `/matches`: doar Lin și Bun, întâi toate Lin, apoi după scor; o singură copie per `file_hash`; implicit 10 rezultate | Un „Bun” cu scor mare nu trece înaintea unui „Lin”; biblioteca utilizatorului are același fișier în mai multe foldere |
+| 2026-11-20 | Filtrele `GET /tracks`: `q` (titlu sau artist), `bpm_min`/`bpm_max`, `energy` (listă, după energia efectivă), `key` (listă de coduri Camelot), `compatible_with` (Lin sau Bun după piesa dată), `sort` (titlu, tempo, ton, energie, durată); se combină | Bara laterală și căutarea din machetă |
+| 2026-11-20 | „Doar compatibile cu …” folosește piesa selectată (ton, tempo și energie), nu doar tonul ei; eticheta arată titlul piesei | Compatibilitatea completă e mai utilă decât un filtru doar pe ton |
+| 2026-11-20 | Motivul unei sugestii (textul) se construiește în backend, în română: „8A → 9A · −1 BPM · energie 3 → 4”; dacă transpunerea schimbă tonul: „(sincronizat: 3A)” | Frontendul doar afișează |
 | 2026-11-20 | Redarea folosește un singur element `<audio>` (streaming cu Range), legat printr-un `MediaElementAudioSourceNode` la un `AudioContext`; totul în `audio/engine.ts`, cu starea în store-ul `usePlayer` | O piesă întreagă decodată în memorie ar ocupa ~130 MB; elementul audio derulează imediat; contextul e pregătit pentru câștig și tranziții |
 | 2026-11-20 | AIFF se servește convertit o dată în FLAC (ffmpeg), în `data/cache/<file_hash>.flac`; restul formatelor se servesc direct, cu media type explicit | Chrome nu redă AIFF; FLAC e fără pierderi și suportă Range |
 | 2026-11-20 | Forma de undă = RMS pe interval, normalizat la cel mai tare interval (nu vârful); `analysis_version` = 3 | Cu vârful, masterele tari arătau ca un bloc plin; cu RMS se văd intro-ul, breakdown-urile și drop-urile |

@@ -8,6 +8,7 @@ import { color, font, fontSize, radius, space } from '../../theme/tokens';
 import { EnergyDots } from '../../ui/EnergyDots';
 import { formatBpm, formatDuration } from '../../ui/format';
 import { Waveform } from '../../ui/Waveform';
+import { MatchList } from './MatchList';
 import { TrackPlayButton } from './TrackPlayButton';
 
 type Track = Schemas['TrackOut'];
@@ -123,6 +124,8 @@ export function TrackPanel({ track }: { track: Track | undefined }) {
             : ro.panel.unknown}
         </Tile>
       </div>
+
+      <MatchList track={track} />
     </div>
   );
 }

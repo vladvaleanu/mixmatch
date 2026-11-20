@@ -87,8 +87,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Tracks */
+        /**
+         * List Tracks
+         * @description Biblioteca, cu filtre. `compatible_with`: doar piesele care merg (Lin sau Bun) după ea.
+         */
         get: operations["list_tracks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tracks/{track_id}/matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Matches
+         * @description Piesele care merg bine după aceasta (Lin sau Bun): întâi Lin, apoi după scor.
+         *
+         *     Același fișier aflat în mai multe foldere (același `file_hash`) apare o singură dată.
+         */
+        get: operations["list_matches"];
         put?: never;
         post?: never;
         delete?: never;
@@ -217,6 +242,20 @@ export interface components {
          * @enum {string}
          */
         JobStatus: "queued" | "running" | "done" | "failed";
+        /**
+         * Label
+         * @enum {string}
+         */
+        Label: "smooth" | "good" | "caution";
+        /** MatchOut */
+        MatchOut: {
+            track: components["schemas"]["TrackOut"];
+            label: components["schemas"]["Label"];
+            /** Score */
+            score: number;
+            /** Reason */
+            reason: string;
+        };
         /** TrackOut */
         TrackOut: {
             /** Id */
@@ -411,7 +450,15 @@ export interface operations {
     };
     list_tracks: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                bpm_min?: number | null;
+                bpm_max?: number | null;
+                energy?: number[] | null;
+                key?: string[] | null;
+                compatible_with?: number | null;
+                sort?: "title" | "bpm" | "key" | "energy" | "duration";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -425,6 +472,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrackOut"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_matches: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                track_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchOut"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

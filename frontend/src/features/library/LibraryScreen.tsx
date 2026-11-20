@@ -1,3 +1,4 @@
+import type { TrackFilters } from '../../api/tracks';
 import { useTracks } from '../../api/tracks';
 import { ro } from '../../i18n/ro';
 import { color, radius, space } from '../../theme/tokens';
@@ -5,7 +6,9 @@ import { ScreenHeader } from '../../ui/ScreenHeader';
 import { AddFolderDialog } from './AddFolderDialog';
 import { AnalysisBanner } from './AnalysisBanner';
 import { useAddFolderDialog } from './addFolderStore';
+import { hasActiveFilters, useFilters } from './filterStore';
 import { useSelectedTrack } from './selectionStore';
+import { Sidebar } from './Sidebar';
 import { TrackPanel } from './TrackPanel';
 import { TrackTable } from './TrackTable';
 
@@ -28,15 +31,31 @@ function FolderIcon() {
   );
 }
 
+const SORTS: TrackFilters['sort'][] = ['title', 'bpm', 'key', 'energy', 'duration'];
+
 export function LibraryScreen() {
-  const tracks = useTracks();
+  const { filters, set, reset } = useFilters();
+  const tracks = useTracks(filters);
+  const library = useTracks(); // toată biblioteca: piesa selectată rămâne în panou și când e filtrată
   const { open, setOpen } = useAddFolderDialog();
-  const count = tracks.data?.length ?? 0;
   const selectedId = useSelectedTrack((s) => s.id);
-  const selected = tracks.data?.find((track) => track.id === selectedId);
+  const selected = library.data?.find((track) => track.id === selectedId);
+  const count = tracks.data?.length ?? 0;
+  const filtered = hasActiveFilters(filters);
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', flex: 1 }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', flex: 1, alignItems: 'stretch' }}>
+      <aside
+        style={{
+          flex: '1 1 220px',
+          maxWidth: 260,
+          padding: space[24],
+          borderRight: `1px solid ${color.border}`,
+        }}
+      >
+        <Sidebar selected={selected} />
+      </aside>
+
       <div
         style={{
           flex: '999 1 560px',
@@ -57,18 +76,48 @@ export function LibraryScreen() {
           }}
         >
           <ScreenHeader title={ro.library.title} subtitle={ro.library.subtitle} />
-          {tracks.data && (
-            <span
+          <div style={{ display: 'flex', gap: space[8], color: color.textMuted }}>
+            {tracks.data && (
+              <span
+                style={{
+                  padding: `${space[8]}px ${space[12]}px`,
+                  borderRadius: radius.round,
+                  background: color.surface2,
+                }}
+              >
+                {ro.library.trackCount(count)}
+              </span>
+            )}
+            <label
               style={{
-                padding: `${space[8]}px ${space[12]}px`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: space[4],
+                padding: `0 ${space[12]}px`,
                 borderRadius: radius.round,
                 background: color.surface2,
-                color: color.textMuted,
               }}
             >
-              {ro.library.trackCount(count)}
-            </span>
-          )}
+              {ro.filters.sortedBy}
+              <select
+                value={filters.sort}
+                onChange={(event) => set({ sort: event.target.value as TrackFilters['sort'] })}
+                style={{
+                  border: 0,
+                  background: 'transparent',
+                  color: color.text,
+                  font: 'inherit',
+                  cursor: 'pointer',
+                }}
+              >
+                {SORTS.map((sort) => (
+                  <option key={sort} value={sort}>
+                    {ro.filters.sort[sort]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         <button
@@ -96,14 +145,33 @@ export function LibraryScreen() {
 
         {tracks.isPending ? (
           <p style={{ margin: 0, color: color.textMuted }}>{ro.library.loading}</p>
-        ) : count === 0 ? (
-          <p style={{ margin: 0, color: color.textMuted }}>{ro.library.empty}</p>
-        ) : (
+        ) : count > 0 ? (
           <TrackTable tracks={tracks.data ?? []} />
+        ) : filtered ? (
+          <p style={{ margin: 0, color: color.textMuted }}>
+            {ro.filters.noResults}{' '}
+            <button
+              type="button"
+              onClick={reset}
+              style={{
+                border: 0,
+                padding: 0,
+                background: 'transparent',
+                color: color.accent,
+                font: 'inherit',
+                cursor: 'pointer',
+              }}
+            >
+              {ro.filters.reset}
+            </button>
+          </p>
+        ) : (
+          <p style={{ margin: 0, color: color.textMuted }}>{ro.library.empty}</p>
         )}
 
         {open && <AddFolderDialog onClose={() => setOpen(false)} />}
       </div>
+
       <aside
         style={{
           flex: '1 1 300px',
