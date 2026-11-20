@@ -5,6 +5,15 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Dependențe pasul 2: backend mutagen (metadate); frontend zustand (starea UI: dialog, toast) și openapi-fetch (client tipat din `schema.d.ts`) | Metadatele vin din plan; openapi-fetch evită tipurile scrise de mână pentru cereri |
+| 2026-11-20 | `file_hash` = SHA-256 peste mărime + primii și ultimii 64 KB, nu peste tot fișierul | Rescanarea a sute de piese durează secunde; schimbarea fișierului tot se detectează |
+| 2026-11-20 | Tag-urile WAV se citesc și din chunk-ul RIFF LIST/INFO (INAM, IART), nu doar din ID3 | Toate WAV-urile verificate din biblioteca utilizatorului au tag-urile doar în INFO |
+| 2026-11-20 | Fără tag de titlu: titlul și artistul se deduc din numele fișierului („08. Artist - Titlu”) | Multe fișiere sunt numite așa |
+| 2026-11-20 | Rescanarea șterge din `tracks` piesele ale căror fișiere au dispărut din folder; fișierele ascunse (`.`, `._`) și folderele `.`/`$` se ignoră | Biblioteca reflectă discul; fișierele AppleDouble și `$RECYCLE.BIN` nu sunt muzică |
+| 2026-11-20 | O singură scanare odată: `POST /library/folders` întoarce 409 `scan_in_progress` dacă una rulează; același folder adăugat din nou = rescanare | Două scanări simultane ar concura pe aceleași rânduri |
+| 2026-11-20 | Erorile API trec printr-un singur handler (`api/errors.py`), inclusiv validarea (422 `invalid_request`) și 404; în frontend, `unwrap` le transformă în `ApiError`, iar QueryClient le arată în toast-ul global (cererile `meta.silent` nu) | Forma `{"error": …}` peste tot și un singur loc de afișare |
+| 2026-11-20 | Butonul principal din bara de sus („Importă piese”) duce în Bibliotecă și deschide dialogul „Adaugă folder”; zona punctată din Bibliotecă deschide același dialog până la drag & drop (pasul 11) | Browserul nu dă calea fișierelor; utilizatorul scrie sau lipește calea |
+| 2026-11-20 | Tokens noi: `overlay` (fundalul dialogurilor) și `zIndex` (dialog, toast) | Necesare pentru dialog și toast; trecute și în design.md |
 | 2026-11-20 | Dependențe backend pasul 1: sqlalchemy ≥ 2, alembic | Baza de date și migrările, ca în plan |
 | 2026-11-20 | Baza stă în `data/mixmatch.db` (folderul se schimbă cu `MIXMATCH_DATA_DIR`); SQLite cu WAL și `foreign_keys = ON` | Un singur fișier local; WAL lasă citirile din API să meargă în timp ce joburile scriu |
 | 2026-11-20 | Migrările rulează automat la pornirea backendului (lifespan), apoi joburile rămase `queued`/`running` devin `failed` cu motivul „întrerupt” | Aplicație locală: baza e mereu la zi; coada e în proces, deci un job neterminat nu mai poate continua după repornire |

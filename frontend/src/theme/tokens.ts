@@ -24,6 +24,7 @@ export const color = {
   warn: '#F5B85B',
   warnSoftBg: '#2A2418',
   warnSoftText: '#FFE2A8',
+  overlay: 'rgba(17, 18, 20, 0.72)',
 } as const;
 
 export const font = {
@@ -67,4 +68,9 @@ export const radius = {
 
 export const size = {
   touch: 44,
+} as const;
+
+export const zIndex = {
+  dialog: 100,
+  toast: 200,
 } as const;

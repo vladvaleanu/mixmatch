@@ -25,7 +25,14 @@ INTERRUPTED = "Jobul a fost întrerupt de o repornire a serverului."
 class JobQueue:
     def __init__(self, session_factory: sessionmaker[Session], max_workers: int = 2) -> None:
         self._sessions = session_factory
-        self._pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="job")
+        self._max_workers = max_workers
+        self._pool: ThreadPoolExecutor | None = None
+
+    def _executor(self) -> ThreadPoolExecutor:
+        # Se creează la nevoie, ca să poată fi refolosit după shutdown (repornirea aplicației).
+        if self._pool is None:
+            self._pool = ThreadPoolExecutor(self._max_workers, thread_name_prefix="job")
+        return self._pool
 
     def submit(self, kind: JobKind, fn: JobFn) -> tuple[int, Future[None]]:
         with self._sessions.begin() as session:
@@ -33,7 +40,7 @@ class JobQueue:
             session.add(job)
             session.flush()
             job_id = job.id
-        return job_id, self._pool.submit(self._run, job_id, fn)
+        return job_id, self._executor().submit(self._run, job_id, fn)
 
     def fail_interrupted(self) -> int:
         """Marchează ca eșuate joburile rămase neterminate de la o rulare anterioară."""
@@ -46,7 +53,9 @@ class JobQueue:
             return result.rowcount
 
     def shutdown(self) -> None:
-        self._pool.shutdown(wait=False, cancel_futures=True)
+        if self._pool is not None:
+            self._pool.shutdown(wait=False, cancel_futures=True)
+            self._pool = None
 
     def _set(self, job_id: int, **values: object) -> None:
         with self._sessions.begin() as session:

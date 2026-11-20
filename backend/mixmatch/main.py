@@ -5,7 +5,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from mixmatch.api import health
+from mixmatch.api import health, jobs, library, tracks
+from mixmatch.api.errors import install_error_handlers
 from mixmatch.config import settings
 from mixmatch.db.session import run_migrations
 from mixmatch.jobs import queue
@@ -20,4 +21,6 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="mixmatch", version=settings.version, lifespan=lifespan)
-app.include_router(health.router, prefix="/api")
+install_error_handlers(app)
+for module in (health, library, jobs, tracks):
+    app.include_router(module.router, prefix="/api")

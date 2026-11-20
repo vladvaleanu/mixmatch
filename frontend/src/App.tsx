@@ -1,15 +1,17 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { ExportsScreen } from './features/exports/ExportsScreen';
+import { ImportButton } from './features/library/ImportButton';
 import { LibraryScreen } from './features/library/LibraryScreen';
 import { MixesScreen } from './features/mix-builder/MixesScreen';
 import { space } from './theme/tokens';
+import { Toast } from './ui/Toast';
 import { TopBar } from './ui/TopBar';
 
 export function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <TopBar />
+      <TopBar actions={<ImportButton />} />
       <main style={{ flex: 1, padding: `${space[32]}px ${space[28]}px` }}>
         <Routes>
           <Route path="/" element={<Navigate to="/biblioteca" replace />} />
@@ -19,6 +21,7 @@ export function App() {
           <Route path="*" element={<Navigate to="/biblioteca" replace />} />
         </Routes>
       </main>
+      <Toast />
     </div>
   );
 }

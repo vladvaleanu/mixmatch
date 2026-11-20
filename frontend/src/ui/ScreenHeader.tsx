@@ -4,7 +4,7 @@ type Props = { title: string; subtitle: string };
 
 export function ScreenHeader({ title, subtitle }: Props) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: space[8] }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: space[6] }}>
       <h1
         style={{
           margin: 0,

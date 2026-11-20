@@ -21,6 +21,10 @@ def _default_data_dir() -> Path:
 class Settings:
     version: str = APP_VERSION
     data_dir: Path = field(default_factory=_default_data_dir)
+    # Formatele pe care le scanează biblioteca.
+    audio_extensions: frozenset[str] = frozenset({".mp3", ".flac", ".wav", ".aif", ".aiff", ".m4a"})
+    # Fișierele mai scurte (sample-uri, jingle-uri) nu intră în bibliotecă.
+    min_duration_s: float = 60.0
 
     @property
     def db_url(self) -> str:

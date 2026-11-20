@@ -32,6 +32,7 @@ Sursa machetelor: `docs/design/mockups/` (vezi README-ul de acolo).
 | `infoSoftBg` / `infoSoftText` | `#1A2130` / `#CFE0FF` | chip „Bun” |
 | `warn` | `#F5B85B` | „Atenție” |
 | `warnSoftBg` / `warnSoftText` | `#2A2418` / `#FFE2A8` | banner și chip „Atenție” |
+| `overlay` | `rgba(17, 18, 20, 0.72)` | fundalul din spatele dialogurilor |
 
 Etichetele tranzițiilor nu se bazează doar pe culoare. Fiecare are și o formă proprie:
 cerc pentru Lin, pătrat pentru Bun, romb pentru Atenție.

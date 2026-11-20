@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { useHealth } from '../api/health';
@@ -65,7 +65,9 @@ function HealthStatus() {
   );
 }
 
-export function TopBar() {
+type Props = { actions?: ReactNode };
+
+export function TopBar({ actions }: Props) {
   return (
     <header style={styles.header}>
       <div style={styles.logo}>
@@ -83,6 +85,7 @@ export function TopBar() {
         ))}
       </nav>
       <HealthStatus />
+      {actions}
     </header>
   );
 }
