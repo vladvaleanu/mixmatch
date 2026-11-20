@@ -32,6 +32,12 @@ FORMATS = {
 }
 
 
+@dataclass(frozen=True)
+class RenderResult:
+    duration_s: float
+    track_starts_s: list[float]  # când începe fiecare piesă (mijlocul tranziției spre ea)
+
+
 class RenderError(Exception):
     """Mixul nu se poate randa (mesajul e pentru utilizator)."""
 
@@ -213,8 +219,8 @@ def render_mix(
     fmt: str,
     report: Callable[[float], None] = lambda _: None,
     limiter: bool = True,
-) -> float:
-    """Randează mixul în `out_path`. Întoarce durata, în secunde."""
+) -> RenderResult:
+    """Randează mixul în `out_path`. Întoarce durata și momentul de început al fiecărei piese."""
     if not tracks:
         raise RenderError("Mixul e gol.")
     if len(plans) != len(tracks) - 1:
@@ -277,7 +283,11 @@ def render_mix(
             capture_output=True,
         )  # fmt: skip
     report(1.0)
-    return end_time
+    return RenderResult(
+        duration_s=end_time,
+        track_starts_s=[0.0]
+        + [start + plan.length_s / 2 for start, plan in zip(starts, plans, strict=True)],
+    )
 
 
 def _transition(

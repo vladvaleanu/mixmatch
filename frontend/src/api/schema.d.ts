@@ -365,6 +365,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Exports
+         * @description Exporturile, cele mai noi primele, cu starea jobului și fișierele existente.
+         */
+        get: operations["list_exports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/{export_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Export File
+         * @description Descarcă fișierul audio, tracklistul sau .cue al unui export.
+         */
+        get: operations["get_export_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -449,8 +489,33 @@ export interface components {
              */
             format?: "wav" | "mp3";
         };
+        /** ExportOut */
+        ExportOut: {
+            /** Id */
+            id: number;
+            /** Mix Id */
+            mix_id: number | null;
+            /** Mix Name */
+            mix_name: string;
+            /** Format */
+            format: string;
+            /** Path */
+            path: string;
+            /** Duration S */
+            duration_s: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            job: components["schemas"]["JobOut"] | null;
+            /** Files */
+            files: ("audio" | "tracklist" | "cue")[];
+        };
         /** ExportStarted */
         ExportStarted: {
+            /** Export Id */
+            export_id: number;
             /** Job Id */
             job_id: number;
             /** Path */
@@ -1605,6 +1670,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_exports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportOut"][];
+                };
+            };
+        };
+    };
+    get_export_file: {
+        parameters: {
+            query?: {
+                kind?: "audio" | "tracklist" | "cue";
+            };
+            header?: never;
+            path: {
+                export_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

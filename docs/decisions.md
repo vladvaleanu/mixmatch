@@ -5,6 +5,10 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | În tracklist și .cue, o piesă începe la mijlocul tranziției spre ea (unde preia basul); prima la 0:00 | Convenția obișnuită la tracklisturile de mix |
+| 2026-11-20 | Lângă fișierul audio se scriu `<nume>.txt` (tracklist: „01. [0:00] Artist — Titlu”) și `<nume>.cue` (FILE … MP3/WAVE, INDEX 01 MM:SS:FF, 75 de cadre/s) | Formatele așteptate de playere și de site-urile de mixuri |
+| 2026-11-20 | Tabelul `exports` (mix_id și job_id cu SET NULL, numele mixului copiat): istoricul rămâne și după ștergerea mixului; `GET /exports` (cu jobul și fișierele existente pe disc), `GET /exports/{id}/file?kind=audio\|tracklist\|cue` (descărcare) | Ecranul Exporturi; un fișier șters de pe disc apare ca lipsă, nu ca eroare |
+| 2026-11-20 | Ecranul Exporturi se reîmprospătează la o secundă doar cât timp un export e în lucru | Progres vizibil fără cereri inutile |
 | 2026-11-20 | După tranziție, B revine lin la viteza ei în 8 bare, începând de la sfârșitul ferestrei de previzualizare (`glide_start_s`, `glide_s` în plan) | Fără revenire, vitezele s-ar aduna de la o piesă la alta, iar etichetele (calculate pe tempo-urile originale) n-ar mai fi corecte; previzualizarea și exportul rămân identice în fereastra comparabilă |
 | 2026-11-20 | Exportul (`export/render.py`) randează în numpy: piesele decodate cu ffmpeg, poziția fiecăreia calculată din viteze (cu revenire), interpolare cubică; basul cu același low-shelf ca Web Audio (filtrul IIR din Essentia), ecoul cu aceleași întârzieri; scris pe bucăți, apoi ffmpeg: `alimiter` la −1 dB, WAV 16-bit sau MP3 320 kbps | Execută exact planurile; nicio dependență nouă; memorie limitată la două piese |
 | 2026-11-20 | Previzualizarea nu are limiter (exportul da) | Limiter-ul doar previne depășirile; auto-gain-ul (−12 LUFS) lasă loc; diferența măsurată fără limiter e sub 0,1 dB |

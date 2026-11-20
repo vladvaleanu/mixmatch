@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useExportMix } from '../../api/exports';
 import { useJob } from '../../api/jobs';
@@ -91,6 +92,9 @@ export function ExportDialog({ mixId, onClose }: { mixId: number; onClose: () =>
               >
                 {exportMix.data.path}
               </code>
+              <Link to="/exporturi" style={{ color: color.accent }}>
+                {e.seeAll}
+              </Link>
             </>
           ) : job?.status === 'failed' ? (
             <p style={{ margin: 0, color: color.warnSoftText }}>

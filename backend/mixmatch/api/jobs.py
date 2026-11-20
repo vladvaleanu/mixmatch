@@ -17,7 +17,7 @@ class JobOut(BaseModel):
     error: str | None
 
 
-def _out(job: Job) -> JobOut:
+def job_out(job: Job) -> JobOut:
     return JobOut(
         id=job.id, kind=job.kind, status=job.status, progress=job.progress, error=job.error
     )
@@ -30,7 +30,7 @@ def list_active_jobs(session: SessionDep) -> list[JobOut]:
     jobs = session.scalars(
         select(Job).where(Job.status.in_([JobStatus.queued, JobStatus.running])).order_by(Job.id)
     )
-    return [_out(job) for job in jobs]
+    return [job_out(job) for job in jobs]
 
 
 @router.get("/jobs/{job_id}", operation_id="get_job", responses=responses(404))
@@ -38,4 +38,4 @@ def get_job(job_id: int, session: SessionDep) -> JobOut:
     job = session.get(Job, job_id)
     if job is None:
         raise ApiError(404, "job_not_found", f"Jobul {job_id} nu există")
-    return _out(job)
+    return job_out(job)

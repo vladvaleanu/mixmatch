@@ -267,7 +267,8 @@ export const ro = {
     start: 'Exportă',
     rendering: 'Se randează…',
     progressLabel: 'Progresul exportului',
-    done: 'Gata! Fișierul e aici:',
+    done: 'Gata! Fișierul e aici (cu tracklistul și .cue alături):',
+    seeAll: 'Vezi în Exporturi',
     failed: 'Exportul a eșuat:',
   },
   addToMix: {
@@ -279,7 +280,19 @@ export const ro = {
   screens: {
     exports: {
       title: 'Exporturi',
-      subtitle: 'Aici vor apărea mixurile exportate, gata de descărcat.',
+      subtitle: 'Mixurile randate, cu tracklistul și fișierul .cue.',
+      empty: 'Încă nu ai exportat niciun mix. Deschide un mix și apasă „Exportă”.',
+      loading: 'Se încarcă exporturile…',
+      rendering: (pct: number) => `Se randează… ${pct}%`,
+      failed: 'Exportul a eșuat:',
+      queued: 'În așteptare…',
+      interrupted: 'Exportul a fost întrerupt.',
+      missing: 'Fișierul nu mai e pe disc.',
+      meta: (format: string, date: string, duration: string | null) =>
+        [format.toUpperCase(), date, duration].filter(Boolean).join(' · '),
+      deletedMix: 'mix șters',
+      download: { audio: 'Descarcă audio', tracklist: 'Tracklist', cue: '.cue' },
+      openMix: 'Deschide mixul',
     },
   },
 } as const;

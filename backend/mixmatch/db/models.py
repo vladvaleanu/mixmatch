@@ -202,3 +202,19 @@ class Transition(Base):
     b_in_s: Mapped[float | None]
     # Corecția manuală a lui B (secunde, în timpul mixului): pozitiv = mai târziu.
     b_nudge_s: Mapped[float] = mapped_column(default=0.0, server_default="0")
+
+
+class Export(Base):
+    """Un mix exportat: fișierul audio, plus tracklistul și .cue cu același nume, alături."""
+
+    __tablename__ = "exports"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # Exportul rămâne în istoric și dacă mixul e șters.
+    mix_id: Mapped[int | None] = mapped_column(ForeignKey("mixes.id", ondelete="SET NULL"))
+    mix_name: Mapped[str] = mapped_column(Text)
+    job_id: Mapped[int | None] = mapped_column(ForeignKey("jobs.id", ondelete="SET NULL"))
+    format: Mapped[str] = mapped_column(String(8))
+    path: Mapped[str] = mapped_column(Text)
+    duration_s: Mapped[float | None]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

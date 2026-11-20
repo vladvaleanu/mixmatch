@@ -40,13 +40,16 @@ def test_b_returns_to_its_own_speed(songs: tuple[Path, Path], tmp_path: Path) ->
     a, b = Side(124, 0.5, 60.0), Side(126, 0.5, 60.0)
     plan = build_plan(a, b, length_bars=8, style=Style.crossfade)
     out = tmp_path / "mix.wav"
-    duration = render_mix(
+    result = render_mix(
         [MixTrack("A", songs[0], -12.0), MixTrack("B", songs[1], -12.0)], [plan], out, "wav",
         limiter=False,
     )  # fmt: skip
     mix = read_wav(out)
-    assert len(mix) == pytest.approx(duration * SAMPLE_RATE, abs=2)
+    assert len(mix) == pytest.approx(result.duration_s * SAMPLE_RATE, abs=2)
     assert plan.speed_b != 1.0
+
+    _, starts0 = _timelines([MixTrack("A", songs[0], None), MixTrack("B", songs[1], None)], [plan])
+    assert result.track_starts_s == pytest.approx([0.0, starts0[0] + plan.length_s / 2])
 
     # După revenire, mixul e B la viteza ei: aceleași eșantioane ca fișierul, la poziția calculată.
     timelines, starts = _timelines(

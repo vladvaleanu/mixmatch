@@ -16,6 +16,7 @@ from sqlalchemy import delete, select  # noqa: E402
 from sqlalchemy.orm import Session, sessionmaker  # noqa: E402
 
 from mixmatch.db.models import (  # noqa: E402
+    Export,
     Job,
     JobStatus,
     LibraryFolder,
@@ -74,5 +75,5 @@ def client() -> Iterator[TestClient]:
 
 def _clear() -> None:
     with SessionLocal.begin() as session:
-        for model in (Transition, MixItem, Mix, Waveform, Track, LibraryFolder, Job):
+        for model in (Export, Transition, MixItem, Mix, Waveform, Track, LibraryFolder, Job):
             session.execute(delete(model))

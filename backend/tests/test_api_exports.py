@@ -78,3 +78,40 @@ def test_names() -> None:
     assert safe_name("A/B: test?") == "A-B- test"
     assert safe_name("...") == "mix"
     assert output_path("Nou", "mp3").name == "Nou.mp3"
+
+
+def test_export_list_tracklist_cue_and_download(client: TestClient, mix_id: int) -> None:
+    client.patch(f"/api/mixes/{mix_id}/transitions/1", json={"length_bars": 8})
+    started = client.post(f"/api/mixes/{mix_id}/export", json={"format": "wav"}).json()
+    listed = client.get("/api/exports").json()
+    assert listed[0]["id"] == started["export_id"]
+    assert listed[0]["job"]["kind"] == "export"
+    wait(client, started["job_id"])
+
+    item = client.get("/api/exports").json()[0]
+    assert (item["mix_name"], item["format"]) == ("Set: test/1", "wav")
+    assert item["files"] == ["audio", "tracklist", "cue"]
+    assert item["duration_s"] > 40
+    assert item["job"]["status"] == "done"
+
+    text = client.get(f"/api/exports/{item['id']}/file?kind=tracklist").text
+    assert text.splitlines()[2] == "01. [0:00] Piesa 0"
+    assert text.splitlines()[3].endswith("] Piesa 1")
+    cue = client.get(f"/api/exports/{item['id']}/file?kind=cue")
+    assert 'FILE "Set- test-1' in cue.text
+    audio = client.get(f"/api/exports/{item['id']}/file")
+    assert audio.headers["content-disposition"].startswith("attachment;")
+    assert audio.content[:4] == b"RIFF"
+
+
+def test_export_survives_mix_deletion(client: TestClient, mix_id: int) -> None:
+    started = client.post(f"/api/mixes/{mix_id}/export", json={"format": "mp3"}).json()
+    wait(client, started["job_id"])
+    client.delete(f"/api/mixes/{mix_id}")
+    item = client.get("/api/exports").json()[0]
+    assert (item["mix_id"], item["mix_name"]) == (None, "Set: test/1")
+
+
+def test_missing_export_or_file(client: TestClient) -> None:
+    assert client.get("/api/exports/999999/file").json()["error"]["code"] == "export_not_found"
+    assert client.get("/api/exports/1/file?kind=pdf").status_code in (404, 422)
