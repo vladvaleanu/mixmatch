@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>mixmatch — Editorul de tranziție</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#111214}
+a{color:#C6F36B}a:hover{color:#E2FFA8}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #111214; color: #F2F2F0; font-family: Inter, system-ui, sans-serif; font-size: 14px; display: flex; flex-direction: column">
+
+  <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; padding: 16px 28px; border-bottom: 1px solid #24252B">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#C6F36B" stroke-width="2"></circle><circle cx="14" cy="14" r="3" fill="#C6F36B"></circle></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -0.01em">mixmatch</span>
+    </div>
+    <a href="Builder.dc.html" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; color: #C9CAD0; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      Înapoi la Set de vineri
+    </a>
+  </header>
+
+  <main style="flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 32px 28px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div>
+        <span style="color: #A4A6AE; font-size: 13px">Tranziția 3 → 4</span>
+        <h1 style="margin: 4px 0 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 32px; font-weight: 600; letter-spacing: -0.02em">Slow Orbit → Paper Lights</h1>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <span style="padding: 8px 12px; border-radius: 999px; background: #1F2418; color: #E2FFA8">Ton 9A → 8A · compatibil</span>
+        <span style="padding: 8px 12px; border-radius: 999px; background: #1A1B1F; color: #C9CAD0">Tempo 123 → 124 · sincronizat</span>
+        <span style="padding: 8px 12px; border-radius: 999px; background: #1A1B1F; color: #C9CAD0">Energie 3 → 4 · urcă</span>
+      </div>
+    </div>
+
+    <section aria-label="Suprapunerea pieselor" style="position: relative; border-radius: 16px; background: #16171A; border: 1px solid #24252B; padding: 28px 24px 20px; display: flex; flex-direction: column; gap: 18px; overflow: hidden">
+      <div style="position: absolute; top: 0; bottom: 0; left: 55%; width: 25%; background: rgba(198, 243, 107, 0.07); border-left: 2px solid {{accent}}; border-right: 2px solid {{accent}}" aria-hidden="true"></div>
+      <span style="position: absolute; top: 8px; left: calc(55% + 10px); font-size: 12px; color: #E2FFA8; font-weight: 600">16 bare · 31 s</span>
+
+      <div style="position: relative; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 12px; color: #A4A6AE">A · Slow Orbit</span>
+        <div style="width: 80%; display: flex; align-items: center; gap: 2px; height: 64px" aria-hidden="true">
+          <sc-for list="{{waveA}}" as="b" hint-placeholder-count="110"><span style="{{b.style}}"></span></sc-for>
+        </div>
+      </div>
+      <div style="position: relative; display: flex; flex-direction: column; gap: 6px; padding-left: 55%">
+        <span style="font-size: 12px; color: #A4A6AE">B · Paper Lights</span>
+        <div style="display: flex; align-items: center; gap: 2px; height: 64px" aria-hidden="true">
+          <sc-for list="{{waveB}}" as="b" hint-placeholder-count="62"><span style="{{b.style}}"></span></sc-for>
+        </div>
+      </div>
+
+      <svg viewBox="0 0 1000 70" preserveAspectRatio="none" style="position: relative; width: 100%; height: 70px; display: block" role="img" aria-label="Automatizare: volumul A scade și volumul B crește în zona tranziției; basul se schimbă la mijloc">
+        <polyline points="0,8 550,8 800,62 1000,62" fill="none" stroke="#9A9CA5" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+        <polyline points="0,62 550,62 800,8 1000,8" fill="none" stroke="{{accent}}" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+        <line x1="675" y1="0" x2="675" y2="70" stroke="#7FB2FF" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></line>
+      </svg>
+      <div style="position: relative; display: flex; flex-wrap: wrap; gap: 18px; font-size: 12px; color: #C9CAD0">
+        <span style="display: flex; align-items: center; gap: 8px"><span style="width: 16px; height: 2px; background: #9A9CA5"></span>Volum A</span>
+        <span style="display: flex; align-items: center; gap: 8px"><span style="width: 16px; height: 2px; background: {{accent}}"></span>Volum B</span>
+        <span style="display: flex; align-items: center; gap: 8px"><span style="width: 16px; height: 0; border-top: 2px dashed #7FB2FF"></span>Schimbul de bas</span>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px">
+      <section style="border-radius: 16px; background: #16171A; border: 1px solid #24252B; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Lungimea tranziției</h2>
+        <div role="group" aria-label="Lungime în bare" style="display: flex; gap: 6px">
+          <button type="button" aria-pressed="false" style="flex: 1; height: 44px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #C9CAD0; font: inherit">8</button>
+          <button type="button" aria-pressed="true" style="flex: 1; height: 44px; border-radius: 10px; border: 0; background: {{accent}}; color: #111214; font: inherit; font-weight: 600">16</button>
+          <button type="button" aria-pressed="false" style="flex: 1; height: 44px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #C9CAD0; font: inherit">32</button>
+          <button type="button" aria-pressed="false" style="flex: 1; height: 44px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #C9CAD0; font: inherit">64</button>
+        </div>
+        <p style="margin: 0; color: #A4A6AE; font-size: 13px; line-height: 1.5">Punctele de intrare și ieșire se lipesc singure de începutul frazelor muzicale.</p>
+      </section>
+
+      <section style="border-radius: 16px; background: #16171A; border: 1px solid #24252B; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600">Stil</h2>
+        <sc-for list="{{styles}}" as="s" hint-placeholder-count="4">
+          <label style="{{s.boxStyle}}">
+            <input type="radio" name="stil" value="{{s.id}}" checked="{{s.on}}" style="width: 18px; height: 18px; accent-color: #C6F36B; margin: 0">
+            <span style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-weight: 500">{{s.name}}</span>
+              <span style="color: #A4A6AE; font-size: 13px">{{s.hint}}</span>
+            </span>
+          </label>
+        </sc-for>
+      </section>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 10px">
+      <button type="button" style="height: 48px; padding: 0 22px; border-radius: 12px; border: 0; background: {{accent}}; color: #111214; font: inherit; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer">
+        <svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"></path></svg>
+        Ascultă tranziția
+      </button>
+      <button type="button" style="height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid #2A2C33; background: #1A1B1F; color: #F2F2F0; font: inherit; font-weight: 500; cursor: pointer">Alege aplicația pentru mine</button>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#C6F36B","options":["#C6F36B","#7FB2FF","#FF9E7A"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#C6F36B';
+    const wave = (seed, n, max, color, fadeFrom, fadeTo) => {
+      let s = seed; const out = [];
+      for (let i = 0; i < n; i++) {
+        s = (s * 9301 + 49297) % 233280;
+        const r = s / 233280;
+        const body = 0.5 + 0.5 * Math.abs(Math.sin(i / 7));
+        const h = Math.max(3, Math.round(max * (0.25 + 0.75 * r) * body));
+        out.push({ style: 'display:block;flex:1 1 0;min-width:1px;height:' + h + 'px;border-radius:1px;background:' + color });
+      }
+      return out;
+    };
+    const styles = [
+      { id: 'eq', name: 'Schimb de bas', hint: 'Basul piesei B intră exact când pleacă cel al lui A', on: true },
+      { id: 'fade', name: 'Crossfade simplu', hint: 'Una se stinge, cealaltă crește', on: false },
+      { id: 'echo', name: 'Ieșire cu ecou', hint: 'Bun pentru tonalități care nu se potrivesc', on: false },
+      { id: 'cut', name: 'Tăietură pe beat', hint: 'Schimbare bruscă, pe primul timp', on: false }
+    ].map((s) => ({ ...s, boxStyle: 'display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;' + (s.on ? 'background:#1F2418;border:1px solid #3A4A20' : 'background:#1A1B1F;border:1px solid #24252B') }));
+    return { accent, styles, waveA: wave(41, 110, 60, '#8A8D97'), waveB: wave(7, 62, 60, accent) };
+  }
+}
+</script>
+</body>
+</html>

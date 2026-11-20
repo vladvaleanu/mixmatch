@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>mixmatch — Bibliotecă</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#111214}
+a{color:#C6F36B}a:hover{color:#E2FFA8}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #111214; color: #F2F2F0; font-family: Inter, system-ui, sans-serif; font-size: 14px; display: flex; flex-direction: column">
+
+  <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; padding: 16px 28px; border-bottom: 1px solid #24252B">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#C6F36B" stroke-width="2"></circle><circle cx="14" cy="14" r="3" fill="#C6F36B"></circle></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -0.01em">mixmatch</span>
+    </div>
+    <nav aria-label="Secțiuni" style="display: flex; gap: 4px">
+      <a href="Main.dc.html" style="padding: 10px 16px; border-radius: 999px; background: #22242A; color: #F2F2F0; text-decoration: none; font-weight: 500">Bibliotecă</a>
+      <a href="Builder.dc.html" style="padding: 10px 16px; border-radius: 999px; color: #A4A6AE; text-decoration: none; font-weight: 500">Mix-uri</a>
+      <a href="#" style="padding: 10px 16px; border-radius: 999px; color: #A4A6AE; text-decoration: none; font-weight: 500">Exporturi</a>
+    </nav>
+    <label style="flex: 1 1 260px; display: flex; align-items: center; gap: 10px; background: #1A1B1F; border: 1px solid #2A2C33; border-radius: 12px; padding: 0 14px; height: 44px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A4A6AE" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Caută în bibliotecă</span>
+      <input type="search" placeholder="Caută piesă, artist, tag…" style="flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #F2F2F0; font: inherit">
+    </label>
+    <button type="button" style="height: 44px; padding: 0 18px; border-radius: 12px; border: 0; background: {{accent}}; color: #111214; font: inherit; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+      Importă piese
+    </button>
+  </header>
+
+  <div style="display: flex; flex-wrap: wrap; flex: 1">
+
+    <aside style="flex: 1 1 220px; max-width: 260px; padding: 24px; border-right: 1px solid #24252B; display: flex; flex-direction: column; gap: 28px">
+      <section style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #A4A6AE">Colecții</h2>
+        <a href="#" style="padding: 10px 12px; border-radius: 10px; background: #1A1B1F; color: #F2F2F0; text-decoration: none">Toate piesele</a>
+        <a href="#" style="padding: 10px 12px; border-radius: 10px; color: #C9CAD0; text-decoration: none">Încălzire</a>
+        <a href="#" style="padding: 10px 12px; border-radius: 10px; color: #C9CAD0; text-decoration: none">Vârf de seară</a>
+        <a href="#" style="padding: 10px 12px; border-radius: 10px; color: #C9CAD0; text-decoration: none">Adăugate recent</a>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #A4A6AE">Filtre</h2>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="color: #C9CAD0">Tempo (BPM)</span>
+          <div style="display: flex; gap: 8px">
+            <button type="button" style="flex: 1; height: 40px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #F2F2F0; font: inherit">118</button>
+            <button type="button" style="flex: 1; height: 40px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #F2F2F0; font: inherit">128</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="color: #C9CAD0">Energie</span>
+          <div style="display: flex; gap: 6px">
+            <button type="button" style="flex: 1; height: 40px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #C9CAD0; font: inherit">1</button>
+            <button type="button" style="flex: 1; height: 40px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #C9CAD0; font: inherit">2</button>
+            <button type="button" style="flex: 1; height: 40px; border-radius: 10px; border: 0; background: #2C3320; color: #E2FFA8; font: inherit">3</button>
+            <button type="button" style="flex: 1; height: 40px; border-radius: 10px; border: 0; background: #2C3320; color: #E2FFA8; font: inherit">4</button>
+            <button type="button" style="flex: 1; height: 40px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #C9CAD0; font: inherit">5</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="color: #C9CAD0">Tonalitate</span>
+          <button type="button" style="height: 40px; border-radius: 10px; border: 1px solid #2A2C33; background: #1A1B1F; color: #F2F2F0; font: inherit; text-align: left; padding: 0 12px">Doar compatibile cu 8A</button>
+        </div>
+      </section>
+      <p style="margin: 0; padding: 14px; border-radius: 12px; background: #1A1B1F; color: #A4A6AE; line-height: 1.5; font-size: 13px">Totul se analizează local. Fișierele tale nu pleacă de pe calculator.</p>
+    </aside>
+
+    <main style="flex: 999 1 560px; min-width: 0; padding: 28px; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px">
+        <div>
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 32px; font-weight: 600; letter-spacing: -0.02em">Biblioteca ta</h1>
+          <p style="margin: 6px 0 0; color: #A4A6AE">Tempo, tonalitate și energie detectate automat la import.</p>
+        </div>
+        <div style="display: flex; gap: 8px; color: #A4A6AE">
+          <span style="padding: 8px 12px; border-radius: 999px; background: #1A1B1F">Sortat după: tempo</span>
+        </div>
+      </div>
+
+      <div style="border: 1.5px dashed #34363E; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; gap: 14px; color: #A4A6AE">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A4A6AE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+        <span>Trage aici un folder sau fișiere MP3, FLAC, WAV, AIFF</span>
+      </div>
+
+      <div style="overflow-x: auto; border-radius: 14px; background: #16171A; border: 1px solid #24252B">
+        <table style="width: 100%; min-width: 760px; border-collapse: collapse">
+          <thead>
+            <tr style="color: #A4A6AE; font-size: 12px; text-align: left">
+              <th scope="col" style="padding: 12px 16px; font-weight: 500; width: 44px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ascultă</span></th>
+              <th scope="col" style="padding: 12px 8px; font-weight: 500">Piesă</th>
+              <th scope="col" style="padding: 12px 8px; font-weight: 500">BPM</th>
+              <th scope="col" style="padding: 12px 8px; font-weight: 500">Ton</th>
+              <th scope="col" style="padding: 12px 8px; font-weight: 500">Energie</th>
+              <th scope="col" style="padding: 12px 8px; font-weight: 500">Durată</th>
+              <th scope="col" style="padding: 12px 16px 12px 8px; font-weight: 500">Formă de undă</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{tracks}}" as="t" hint-placeholder-count="8">
+              <tr style="{{t.rowStyle}}">
+                <td style="padding: 10px 16px">
+                  <button type="button" aria-label="Ascultă {{t.title}}" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #24262C; color: #F2F2F0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+                    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"></path></svg>
+                  </button>
+                </td>
+                <td style="padding: 10px 8px">
+                  <div style="display: flex; align-items: center; gap: 12px">
+                    <span style="{{t.art}}"></span>
+                    <span style="display: flex; flex-direction: column; gap: 2px">
+                      <span style="font-weight: 500">{{t.title}}</span>
+                      <span style="color: #A4A6AE; font-size: 13px">{{t.artist}}</span>
+                    </span>
+                  </div>
+                </td>
+                <td style="padding: 10px 8px; font-variant-numeric: tabular-nums">{{t.bpm}}</td>
+                <td style="padding: 10px 8px"><span style="{{t.keyStyle}}">{{t.key}}</span></td>
+                <td style="padding: 10px 8px">
+                  <span style="display: flex; gap: 4px" aria-label="Energie {{t.energy}} din 5">
+                    <sc-for list="{{t.dots}}" as="d" hint-placeholder-count="5"><span style="{{d.style}}"></span></sc-for>
+                  </span>
+                </td>
+                <td style="padding: 10px 8px; color: #C9CAD0; font-variant-numeric: tabular-nums">{{t.dur}}</td>
+                <td style="padding: 10px 16px 10px 8px">
+                  <span style="display: flex; align-items: center; gap: 2px; height: 28px" aria-hidden="true">
+                    <sc-for list="{{t.wave}}" as="b" hint-placeholder-count="40"><span style="{{b.style}}"></span></sc-for>
+                  </span>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <aside style="flex: 1 1 300px; max-width: 380px; padding: 28px 24px; border-left: 1px solid #24252B; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #A4A6AE">Selectată</span>
+        <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 24px; font-weight: 600">Paper Lights</span>
+        <span style="color: #A4A6AE">Oda Kray</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 2px; height: 64px; padding: 0 4px; border-radius: 12px; background: #1A1B1F" aria-hidden="true">
+        <sc-for list="{{bigWave}}" as="b" hint-placeholder-count="64"><span style="{{b.style}}"></span></sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div style="padding: 12px; border-radius: 12px; background: #1A1B1F"><div style="color: #A4A6AE; font-size: 12px">Tempo</div><div style="font-size: 18px; font-weight: 600; margin-top: 4px">124 BPM</div></div>
+        <div style="padding: 12px; border-radius: 12px; background: #1A1B1F"><div style="color: #A4A6AE; font-size: 12px">Tonalitate</div><div style="font-size: 18px; font-weight: 600; margin-top: 4px">8A · La minor</div></div>
+        <div style="padding: 12px; border-radius: 12px; background: #1A1B1F"><div style="color: #A4A6AE; font-size: 12px">Energie</div><div style="font-size: 18px; font-weight: 600; margin-top: 4px">4 din 5</div></div>
+        <div style="padding: 12px; border-radius: 12px; background: #1A1B1F"><div style="color: #A4A6AE; font-size: 12px">Intro / Outro</div><div style="font-size: 18px; font-weight: 600; margin-top: 4px">16 / 32 bare</div></div>
+      </div>
+      <a href="Builder.dc.html" style="height: 48px; border-radius: 12px; background: {{accent}}; color: #111214; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">Adaugă în mix</a>
+
+      <section style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Merg bine după ea</h2>
+        <sc-for list="{{matches}}" as="m" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: #1A1B1F">
+            <span style="{{m.art}}"></span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+              <span style="font-weight: 500">{{m.title}}</span>
+              <span style="color: #A4A6AE; font-size: 13px">{{m.why}}</span>
+            </span>
+            <span style="padding: 4px 10px; border-radius: 999px; background: #2C3320; color: #E2FFA8; font-size: 12px; font-weight: 600">{{m.fit}}</span>
+          </div>
+        </sc-for>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#C6F36B","options":["#C6F36B","#7FB2FF","#FF9E7A"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#C6F36B';
+    const rnd = (seed) => { let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; };
+    const wave = (seed, n, max, color) => {
+      const r = rnd(seed); const out = [];
+      for (let i = 0; i < n; i++) {
+        const env = 0.35 + 0.65 * Math.sin(Math.PI * (i + 0.5) / n);
+        const h = Math.max(3, Math.round(max * (0.3 + 0.7 * r()) * env));
+        out.push({ style: 'display:block;width:2px;flex:0 0 2px;height:' + h + 'px;border-radius:1px;background:' + color });
+      }
+      return out;
+    };
+    const hue = (k) => ((parseInt(k, 10) * 30) + 60) % 360;
+    const keyStyle = (k) => 'display:inline-block;min-width:34px;text-align:center;padding:4px 8px;border-radius:8px;font-weight:600;font-size:12px;background:hsl(' + hue(k) + ',60%,74%);color:#111214';
+    const art = (k, size) => 'display:block;flex:0 0 ' + size + 'px;width:' + size + 'px;height:' + size + 'px;border-radius:8px;background:hsl(' + hue(k) + ',35%,32%)';
+    const raw = [
+      { title: 'Driftwood', artist: 'Sena Holt', bpm: 118, key: '8B', energy: 2, dur: '7:15' },
+      { title: 'Glass Hours', artist: 'Ivo Rennt', bpm: 120, key: '7A', energy: 2, dur: '6:40' },
+      { title: 'Neon Tide', artist: 'Lumen Field', bpm: 122, key: '8A', energy: 3, dur: '6:12' },
+      { title: 'Slow Orbit', artist: 'Mira Vey', bpm: 123, key: '9A', energy: 3, dur: '7:02' },
+      { title: 'Paper Lights', artist: 'Oda Kray', bpm: 124, key: '8A', energy: 4, dur: '5:48', selected: true },
+      { title: 'Concrete Bloom', artist: 'Tess Arno', bpm: 125, key: '9B', energy: 4, dur: '5:55' },
+      { title: 'Low Sun', artist: 'Haldor', bpm: 126, key: '3B', energy: 5, dur: '6:30' },
+      { title: 'Rift', artist: 'Kaya Moll', bpm: 128, key: '4B', energy: 5, dur: '5:21' }
+    ];
+    const tracks = raw.map((t, i) => ({
+      ...t,
+      rowStyle: t.selected ? 'background:#22252B' : 'border-top:1px solid #1F2025',
+      art: art(t.key, 36),
+      keyStyle: keyStyle(t.key),
+      dots: [1, 2, 3, 4, 5].map((n) => ({ style: 'display:block;width:8px;height:8px;border-radius:999px;background:' + (n <= t.energy ? accent : '#34363E') })),
+      wave: wave(17 + i * 31, 40, 26, t.selected ? accent : '#6B6E78')
+    }));
+    const matches = [
+      { title: 'Slow Orbit', key: '9A', why: '8A → 9A · −1 BPM', fit: 'Lin' },
+      { title: 'Concrete Bloom', key: '9B', why: '8A → 9B · +1 BPM · urcă energia', fit: 'Bun' },
+      { title: 'Neon Tide', key: '8A', why: 'Același ton · −2 BPM', fit: 'Lin' }
+    ].map((m) => ({ ...m, art: art(m.key, 32) }));
+    return { accent, tracks, matches, bigWave: wave(99, 64, 52, accent) };
+  }
+}
+</script>
+</body>
+</html>

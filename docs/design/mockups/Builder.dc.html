@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>mixmatch — Constructorul de mix</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#111214}
+a{color:#C6F36B}a:hover{color:#E2FFA8}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #111214; color: #F2F2F0; font-family: Inter, system-ui, sans-serif; font-size: 14px; display: flex; flex-direction: column">
+
+  <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; padding: 16px 28px; border-bottom: 1px solid #24252B">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#C6F36B" stroke-width="2"></circle><circle cx="14" cy="14" r="3" fill="#C6F36B"></circle></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -0.01em">mixmatch</span>
+    </div>
+    <nav aria-label="Secțiuni" style="display: flex; gap: 4px">
+      <a href="Main.dc.html" style="padding: 10px 16px; border-radius: 999px; color: #A4A6AE; text-decoration: none; font-weight: 500">Bibliotecă</a>
+      <a href="Builder.dc.html" style="padding: 10px 16px; border-radius: 999px; background: #22242A; color: #F2F2F0; text-decoration: none; font-weight: 500">Mix-uri</a>
+      <a href="#" style="padding: 10px 16px; border-radius: 999px; color: #A4A6AE; text-decoration: none; font-weight: 500">Exporturi</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid #2A2C33; background: #1A1B1F; color: #F2F2F0; font: inherit; font-weight: 500; cursor: pointer">Exportă</button>
+  </header>
+
+  <div style="display: flex; flex-wrap: wrap; flex: 1">
+    <main style="flex: 999 1 560px; min-width: 0; padding: 28px; display: flex; flex-direction: column; gap: 22px">
+
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div>
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 32px; font-weight: 600; letter-spacing: -0.02em">Set de vineri</h1>
+          <p style="margin: 6px 0 0; color: #A4A6AE">7 piese · 43 min · 120 → 128 BPM</p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid #2A2C33; background: #1A1B1F; color: #F2F2F0; font: inherit; font-weight: 500; display: flex; align-items: center; gap: 8px; cursor: pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h11M4 12h7M4 17h4"></path><path d="M18 5v14M15 16l3 3 3-3"></path></svg>
+            Ordonează automat
+          </button>
+          <button type="button" style="height: 44px; padding: 0 18px; border-radius: 12px; border: 0; background: {{accent}}; color: #111214; font: inherit; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer">
+            <svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"></path></svg>
+            Ascultă mixul
+          </button>
+        </div>
+      </div>
+
+      <section style="border-radius: 16px; background: #16171A; border: 1px solid #24252B; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+          <div>
+            <h2 style="margin: 0; font-size: 15px; font-weight: 600">Curba de energie</h2>
+            <p style="margin: 4px 0 0; color: #A4A6AE; font-size: 13px">Linia punctată e forma dorită. Cea plină e mixul tău.</p>
+          </div>
+          <div role="group" aria-label="Forma setului" style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: #1F2025">
+            <button type="button" aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 0; background: transparent; color: #C9CAD0; font: inherit">Încălzire</button>
+            <button type="button" aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 0; background: #2E3036; color: #F2F2F0; font: inherit; font-weight: 500">Urcare</button>
+            <button type="button" aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 0; background: transparent; color: #C9CAD0; font: inherit">Val</button>
+            <button type="button" aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 0; background: transparent; color: #C9CAD0; font: inherit">Liber</button>
+          </div>
+        </div>
+        <svg viewBox="0 0 1000 150" preserveAspectRatio="none" style="width: 100%; height: 150px; display: block" role="img" aria-label="Curba de energie: pornește de la 2, urcă constant până la 5">
+          <line x1="0" y1="30" x2="1000" y2="30" stroke="#24252B" stroke-width="1"></line>
+          <line x1="0" y1="75" x2="1000" y2="75" stroke="#24252B" stroke-width="1"></line>
+          <line x1="0" y1="120" x2="1000" y2="120" stroke="#24252B" stroke-width="1"></line>
+          <path d="M40 125 C 300 110, 600 60, 960 22" fill="none" stroke="#6B6E78" stroke-width="2" stroke-dasharray="6 6" vector-effect="non-scaling-stroke"></path>
+          <polyline points="40,120 193,98 346,98 500,64 653,64 806,30 960,30" fill="none" stroke="{{accent}}" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
+          <circle cx="40" cy="120" r="6" fill="{{accent}}"></circle>
+          <circle cx="193" cy="98" r="6" fill="{{accent}}"></circle>
+          <circle cx="346" cy="98" r="6" fill="{{accent}}"></circle>
+          <circle cx="500" cy="64" r="6" fill="{{accent}}"></circle>
+          <circle cx="653" cy="64" r="6" fill="{{accent}}"></circle>
+          <circle cx="806" cy="30" r="6" fill="#F5B85B"></circle>
+          <circle cx="960" cy="30" r="6" fill="{{accent}}"></circle>
+        </svg>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Ordinea pieselor</h2>
+          <span style="color: #A4A6AE; font-size: 13px">Trage ca să reordonezi</span>
+        </div>
+        <div style="overflow-x: auto; padding-bottom: 6px">
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; gap: 0; min-width: max-content">
+            <sc-for list="{{seq}}" as="s" hint-placeholder-count="7">
+              <li style="display: flex; align-items: stretch">
+                <sc-if value="{{s.hasLink}}" hint-placeholder-val="{{ false }}">
+                  <a href="Transition.dc.html" aria-label="Editează tranziția: {{s.linkLabel}}" style="{{s.linkStyle}}">
+                    <span style="{{s.dotStyle}}"></span>
+                    <span style="font-size: 12px; font-weight: 600">{{s.linkText}}</span>
+                  </a>
+                </sc-if>
+                <div style="width: 168px; padding: 14px; border-radius: 14px; background: #1A1B1F; border: 1px solid #24252B; display: flex; flex-direction: column; gap: 10px">
+                  <div style="display: flex; align-items: center; justify-content: space-between">
+                    <span style="color: #A4A6AE; font-size: 12px; font-variant-numeric: tabular-nums">{{s.n}}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#6B6E78" aria-hidden="true"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg>
+                  </div>
+                  <span style="{{s.art}}"></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px">
+                    <span style="font-weight: 500">{{s.title}}</span>
+                    <span style="color: #A4A6AE; font-size: 13px">{{s.artist}}</span>
+                  </span>
+                  <span style="display: flex; gap: 6px; align-items: center; font-size: 12px; color: #C9CAD0">
+                    <span style="font-variant-numeric: tabular-nums">{{s.bpm}}</span>
+                    <span style="{{s.keyStyle}}">{{s.key}}</span>
+                    <span>· E{{s.energy}}</span>
+                  </span>
+                </div>
+              </li>
+            </sc-for>
+            <li style="display: flex; align-items: stretch; padding-left: 12px">
+              <button type="button" style="width: 120px; border-radius: 14px; border: 1.5px dashed #34363E; background: transparent; color: #A4A6AE; font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                Adaugă
+              </button>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section style="border-radius: 14px; background: #2A2418; padding: 16px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5B85B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9.5 17h-19z"></path><path d="M12 10v4M12 17.5v.01"></path></svg>
+        <p style="margin: 0; flex: 1 1 320px; color: #F5DDB0; line-height: 1.5">Între <strong style="color: #FFF1D6">Concrete Bloom</strong> (9B) și <strong style="color: #FFF1D6">Low Sun</strong> (3B) tonalitățile se ciocnesc. Poți schimba piesa sau folosi o tranziție scurtă cu ecou.</p>
+        <a href="Transition.dc.html" style="padding: 10px 14px; border-radius: 10px; background: #3A3120; color: #FFE2A8; text-decoration: none; font-weight: 500">Rezolvă</a>
+      </section>
+    </main>
+
+    <aside style="flex: 1 1 300px; max-width: 380px; padding: 28px 24px; border-left: 1px solid #24252B; display: flex; flex-direction: column; gap: 18px">
+      <div>
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Ce urmează după Rift?</h2>
+        <p style="margin: 4px 0 0; color: #A4A6AE; font-size: 13px; line-height: 1.5">Sugestii din biblioteca ta, după ton, tempo și curba aleasă.</p>
+      </div>
+      <sc-for list="{{suggest}}" as="m" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: #1A1B1F">
+          <span style="{{m.art}}"></span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-weight: 500">{{m.title}}</span>
+            <span style="color: #A4A6AE; font-size: 13px">{{m.why}}</span>
+          </span>
+          <button type="button" aria-label="Adaugă {{m.title}} în mix" style="width: 40px; height: 40px; border-radius: 10px; border: 0; background: #24262C; color: #F2F2F0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+        </div>
+      </sc-for>
+      <div style="margin-top: 8px; padding: 16px; border-radius: 14px; border: 1px solid #24252B; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-weight: 600">Legendă tranziții</span>
+        <span style="display: flex; align-items: center; gap: 10px; color: #C9CAD0"><span style="width: 10px; height: 10px; border-radius: 999px; background: {{accent}}"></span>Lin — ton compatibil, tempo apropiat</span>
+        <span style="display: flex; align-items: center; gap: 10px; color: #C9CAD0"><span style="width: 10px; height: 10px; border-radius: 3px; background: #7FB2FF"></span>Bun — merge, cu puțină atenție</span>
+        <span style="display: flex; align-items: center; gap: 10px; color: #C9CAD0"><span style="width: 10px; height: 10px; transform: rotate(45deg); background: #F5B85B"></span>Atenție — ton sau tempo departe</span>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#C6F36B","options":["#C6F36B","#7FB2FF","#FF9E7A"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#C6F36B';
+    const hue = (k) => ((parseInt(k, 10) * 30) + 60) % 360;
+    const keyStyle = (k) => 'display:inline-block;padding:2px 6px;border-radius:6px;font-weight:600;font-size:11px;background:hsl(' + hue(k) + ',60%,74%);color:#111214';
+    const art = (k, w, h) => 'display:block;width:' + w + ';height:' + h + 'px;border-radius:10px;background:hsl(' + hue(k) + ',35%,32%)';
+    const raw = [
+      { title: 'Glass Hours', artist: 'Ivo Rennt', bpm: 120, key: '7A', energy: 2 },
+      { title: 'Neon Tide', artist: 'Lumen Field', bpm: 122, key: '8A', energy: 3, tr: 'ok' },
+      { title: 'Slow Orbit', artist: 'Mira Vey', bpm: 123, key: '9A', energy: 3, tr: 'ok' },
+      { title: 'Paper Lights', artist: 'Oda Kray', bpm: 124, key: '8A', energy: 4, tr: 'ok' },
+      { title: 'Concrete Bloom', artist: 'Tess Arno', bpm: 125, key: '9B', energy: 4, tr: 'good' },
+      { title: 'Low Sun', artist: 'Haldor', bpm: 126, key: '3B', energy: 5, tr: 'warn' },
+      { title: 'Rift', artist: 'Kaya Moll', bpm: 128, key: '4B', energy: 5, tr: 'ok' }
+    ];
+    const look = {
+      ok: { text: 'Lin', color: accent, bg: '#1F2418', fg: '#E2FFA8', shape: '999px', rot: '0deg' },
+      good: { text: 'Bun', color: '#7FB2FF', bg: '#1A2130', fg: '#CFE0FF', shape: '3px', rot: '0deg' },
+      warn: { text: 'Atenție', color: '#F5B85B', bg: '#2A2418', fg: '#FFE2A8', shape: '2px', rot: '45deg' }
+    };
+    const seq = raw.map((t, i) => {
+      const l = t.tr ? look[t.tr] : null;
+      const prev = i > 0 ? raw[i - 1] : null;
+      return {
+        ...t,
+        n: String(i + 1).padStart(2, '0'),
+        art: art(t.key, '100%', 72),
+        keyStyle: keyStyle(t.key),
+        hasLink: !!l,
+        linkText: l ? l.text : '',
+        linkLabel: prev ? prev.title + ' → ' + t.title : '',
+        linkStyle: l ? 'width:76px;margin:0 6px;border-radius:12px;background:' + l.bg + ';color:' + l.fg + ';text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px' : '',
+        dotStyle: l ? 'display:block;width:10px;height:10px;border-radius:' + l.shape + ';transform:rotate(' + l.rot + ');background:' + l.color : ''
+      };
+    });
+    const suggest = [
+      { title: 'Low Sun', key: '3B', why: 'Deja în mix' },
+      { title: 'Driftwood', key: '8B', why: 'Răcire lină · 118 BPM' },
+      { title: 'Concrete Bloom', key: '9B', why: 'Deja în mix' }
+    ];
+    const sugg = [
+      { title: '[Piesă 4B · ~128]', key: '4B', why: 'Același ton · energie 5' },
+      { title: '[Piesă 5B · ~129]', key: '5B', why: '+1 pe roată · urcă puțin' },
+      { title: '[Piesă 4A · ~127]', key: '4A', why: 'Trecere în minor · coboară' },
+      { title: 'Driftwood', key: '8B', why: 'Pentru final · 118 BPM, liniștită' }
+    ].map((m) => ({ ...m, art: art(m.key, '40px', 40) + ';flex:0 0 40px' }));
+    return { accent, seq, suggest: sugg };
+  }
+}
+</script>
+</body>
+</html>
