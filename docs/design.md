@@ -25,7 +25,8 @@ Sursa machetelor: `docs/design/mockups/` (vezi README-ul de acolo).
 | `waveIdle` | `#6B6E78` | forma de undă a pieselor neselectate |
 | `accent` | `#C6F36B` | butonul principal, selecție, „Lin”, energie plină |
 | `accentText` | `#111214` | text pe accent |
-| `accentSoftBg` | `#1F2418` / `#2C3320` | fundal pentru chip-uri „Lin” / filtru activ |
+| `accentSoftBg` | `#1F2418` | fundal pentru chip-uri „Lin” |
+| `accentSoftBgStrong` | `#2C3320` | fundal pentru filtru activ |
 | `accentSoftText` | `#E2FFA8` | text pe accentSoftBg |
 | `info` | `#7FB2FF` | „Bun”, linia schimbului de bas |
 | `infoSoftBg` / `infoSoftText` | `#1A2130` / `#CFE0FF` | chip „Bun” |
