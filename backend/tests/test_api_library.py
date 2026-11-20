@@ -9,7 +9,7 @@ from sqlalchemy import delete
 from mixmatch.db.models import Job, LibraryFolder, Track
 from mixmatch.db.session import SessionLocal
 from mixmatch.main import app
-from tests.audio import make_audio
+from tests.audio import make_audio, make_music
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def client() -> Iterator[TestClient]:
 
 
 def wait_for_job(client: TestClient, job_id: int) -> dict[str, object]:
-    deadline = time.monotonic() + 10
+    deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
         job = client.get(f"/api/jobs/{job_id}").json()
         if job["status"] in ("done", "failed"):
@@ -48,6 +48,25 @@ def test_add_folder_scans_and_lists_tracks(client: TestClient, folder: Path) -> 
     listed = client.get("/api/tracks").json()
     assert [(t["title"], t["artist"]) for t in listed] == [("alfa", "Y"), ("Beta", "X")]
     assert listed[0]["duration_s"] == pytest.approx(61, abs=0.2)
+
+
+def test_scan_starts_analysis(client: TestClient, tmp_path: Path) -> None:
+    make_music(tmp_path / "song.wav", bpm=124, root_hz=220.0, minor=True, duration_s=61)
+    scan = client.post("/api/library/folders", json={"path": str(tmp_path)}).json()
+    wait_for_job(client, scan["job_id"])
+
+    active = client.get("/api/jobs/active").json()
+    analysis = [job for job in active if job["kind"] == "analysis"]
+    if analysis:  # poate s-a terminat deja
+        assert wait_for_job(client, analysis[0]["id"])["status"] == "done"
+    deadline = time.monotonic() + 20
+    while not (track := client.get("/api/tracks").json()[0])["analyzed"]:
+        assert time.monotonic() < deadline, "Analiza nu s-a terminat"
+        time.sleep(0.1)
+
+    assert track["bpm"] == pytest.approx(124, abs=1)
+    assert (track["key_camelot"], track["key_name"]) == ("8A", "La minor")
+    assert client.get("/api/jobs/active").json() == []
 
 
 def test_adding_same_folder_twice_rescans_without_duplicates(

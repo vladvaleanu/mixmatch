@@ -5,6 +5,15 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Dependență pasul 3a: essentia (2.1b6.dev1389, wheel pentru Python 3.12 / arm64; aduce numpy). Licență AGPL, ok pentru uz personal | Analiza de tempo și ton, cum prevede planul |
+| 2026-11-20 | Tempo: `RhythmExtractor2013(method="multifeature")`, valoarea Essentia rotunjită la o zecimală, fără rafinare din beat-uri | Pe 80 de piese: 69 exacte față de Traktor (eroare medie 0,05 BPM); rafinarea din beat-uri a stricat 24 de piese cu breakdown-uri |
+| 2026-11-20 | Ton: `KeyExtractor(profileType="bgate")` | Pe 100 de piese comparate cu Traktor, `bgate` a avut cele mai puține tonuri greșite (16, față de 21 la `edma` și 23 la `edmm`) |
+| 2026-11-20 | Analiza rulează ca job, în procese separate (`analysis_workers` = min(6, nuclee − 2)); pornește după fiecare scanare și la pornirea serverului, dacă există piese neanalizate | ~0,9 s pe piesă cu 4 procese; mixurile lungi ocupă câteva sute de MB fiecare, de aici limita de 6 |
+| 2026-11-20 | O analiză eșuată primește și ea `analysis_version` (cu bpm/ton goale), ca să nu se reia la fiecare pornire; o piesă cu `file_hash` schimbat redevine neanalizată | Fără bucle infinite pe fișiere stricate; fișierele modificate se reanalizează |
+| 2026-11-20 | Rezultatul analizei se salvează doar dacă rândul are tot aceeași cale | SQLite refolosește id-urile șterse; o rescanare în timpul analizei putea pune rezultatul pe altă piesă |
+| 2026-11-20 | `GET /jobs/active` (joburile în lucru); `TrackOut` primește `bpm`, `key_camelot`, `key_name` (numele clasic, din `music/camelot.py`) și `analyzed` | Bannerul de analiză din Bibliotecă; frontendul nu calculează numele tonului |
+| 2026-11-20 | BPM afișat fără zecimală când e întreg, altfel cu virgulă („123,5”) | Ca în machetă, cu formatul românesc |
+| 2026-11-20 | Piesele de test: `backend/tools/evaluate_analysis.py pick` scrie `test-tracks/reference.csv` (20 de piese din `~/Music`, din colecția Traktor), `run` raportează acordul | Măsurarea se poate repeta la fiecare schimbare de algoritm |
 | 2026-11-20 | Dependențe pasul 2: backend mutagen (metadate); frontend zustand (starea UI: dialog, toast) și openapi-fetch (client tipat din `schema.d.ts`) | Metadatele vin din plan; openapi-fetch evită tipurile scrise de mână pentru cereri |
 | 2026-11-20 | `file_hash` = SHA-256 peste mărime + primii și ultimii 64 KB, nu peste tot fișierul | Rescanarea a sute de piese durează secunde; schimbarea fișierului tot se detectează |
 | 2026-11-20 | Tag-urile WAV se citesc și din chunk-ul RIFF LIST/INFO (INAM, IART), nu doar din ID3 | Toate WAV-urile verificate din biblioteca utilizatorului au tag-urile doar în INFO |

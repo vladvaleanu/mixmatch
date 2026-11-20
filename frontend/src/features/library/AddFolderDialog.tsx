@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 
-import { useJob } from '../../api/jobs';
+import { activeJobsKey, useJob } from '../../api/jobs';
 import { useAddFolder } from '../../api/library';
 import { tracksKey, useTracks } from '../../api/tracks';
 import { ro } from '../../i18n/ro';
@@ -27,6 +27,11 @@ export function AddFolderDialog({ onClose }: Props) {
   useEffect(() => {
     if (job) void queryClient.invalidateQueries({ queryKey: tracksKey });
   }, [job, queryClient]);
+
+  // După scanare pornește analiza; bannerul din Bibliotecă o află din joburile active.
+  useEffect(() => {
+    if (finished) void queryClient.invalidateQueries({ queryKey: activeJobsKey });
+  }, [finished, queryClient]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -79,6 +84,7 @@ export function AddFolderDialog({ onClose }: Props) {
           ) : job?.status === 'done' ? (
             <>
               <p style={{ margin: 0 }}>{ro.addFolder.done(tracks.data?.length ?? 0)}</p>
+              <p style={{ margin: 0, color: color.textSoft }}>{ro.addFolder.analysisContinues}</p>
               <p style={{ margin: 0, color: color.textMuted, fontSize: fontSize.meta }}>
                 {ro.addFolder.shortSkipped}
               </p>

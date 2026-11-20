@@ -74,3 +74,18 @@ export const zIndex = {
   dialog: 100,
   toast: 200,
 } as const;
+
+/** Nuanța tonului pe roata Camelot (din design.md): cifra n → (n·30 + 60) mod 360. */
+function keyHue(camelot: string): number {
+  return (Number.parseInt(camelot, 10) * 30 + 60) % 360;
+}
+
+/** Fundalul unui KeyPill. */
+export function keyColor(camelot: string): string {
+  return `hsl(${keyHue(camelot)}, 60%, 74%)`;
+}
+
+/** Coperta-placeholder a unei piese: aceeași nuanță, mai închisă. Fără ton: `control`. */
+export function coverColor(camelot: string | null): string {
+  return camelot ? `hsl(${keyHue(camelot)}, 35%, 32%)` : color.control;
+}

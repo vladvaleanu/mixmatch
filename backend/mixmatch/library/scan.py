@@ -197,6 +197,8 @@ def scan_folder(
                     session.add(Track(path=key, **values))
                     result.added += 1
                 elif any(getattr(track, k) != v for k, v in values.items()):
+                    if track.file_hash != values["file_hash"]:
+                        track.analysis_version = None  # fișier schimbat → se reanalizează
                     for k, v in values.items():
                         setattr(track, k, v)
                     result.updated += 1

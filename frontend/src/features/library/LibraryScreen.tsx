@@ -3,6 +3,7 @@ import { ro } from '../../i18n/ro';
 import { color, radius, space } from '../../theme/tokens';
 import { ScreenHeader } from '../../ui/ScreenHeader';
 import { AddFolderDialog } from './AddFolderDialog';
+import { AnalysisBanner } from './AnalysisBanner';
 import { useAddFolderDialog } from './addFolderStore';
 import { TrackTable } from './TrackTable';
 
@@ -76,6 +77,8 @@ export function LibraryScreen() {
         <FolderIcon />
         {ro.library.addFolderZone}
       </button>
+
+      <AnalysisBanner />
 
       {tracks.isPending ? (
         <p style={{ margin: 0, color: color.textMuted }}>{ro.library.loading}</p>

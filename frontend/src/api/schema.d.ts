@@ -33,8 +33,30 @@ export interface paths {
         /**
          * Add Library Folder
          * @description Adaugă un folder (sau îl rescanează, dacă există deja) și pornește scanarea.
+         *
+         *     După scanare pornește automat analiza pieselor noi sau schimbate.
          */
         post: operations["add_library_folder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Active Jobs
+         * @description Joburile în așteptare sau în lucru (ex. analiza pornită după o scanare).
+         */
+        get: operations["list_active_jobs"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -145,6 +167,14 @@ export interface components {
             artist: string | null;
             /** Duration S */
             duration_s: number;
+            /** Bpm */
+            bpm: number | null;
+            /** Key Camelot */
+            key_camelot: string | null;
+            /** Key Name */
+            key_name: string | null;
+            /** Analyzed */
+            analyzed: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -235,6 +265,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_active_jobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"][];
                 };
             };
         };

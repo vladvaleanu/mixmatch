@@ -8,7 +8,18 @@ import { useToastStore } from '../../ui/toastStore';
 import { LibraryScreen } from './LibraryScreen';
 import { useAddFolderDialog } from './addFolderStore';
 
-const track = { id: 1, title: 'Paper Lights', artist: 'Oda Kray', duration_s: 348 };
+const track = {
+  id: 1,
+  title: 'Paper Lights',
+  artist: 'Oda Kray',
+  duration_s: 348,
+  bpm: 124,
+  key_camelot: '8A',
+  key_name: 'La minor',
+  analyzed: true,
+};
+const pending = { ...track, bpm: null, key_camelot: null, key_name: null, analyzed: false };
+const noJobs = { 'GET /api/jobs/active': () => [] };
 
 afterEach(() => {
   cleanup();
@@ -18,8 +29,8 @@ afterEach(() => {
 });
 
 describe('LibraryScreen', () => {
-  it('arată piesele cu artist și durată', async () => {
-    mockApi({ 'GET /api/tracks': () => [track, { ...track, id: 2, artist: null }] });
+  it('arată piesele cu artist, BPM, ton și durată', async () => {
+    mockApi({ ...noJobs, 'GET /api/tracks': () => [track, { ...track, id: 2, artist: null }] });
     renderWithProviders(<LibraryScreen />);
 
     expect(await screen.findAllByText('Paper Lights')).toHaveLength(2);
@@ -27,12 +38,29 @@ describe('LibraryScreen', () => {
     expect(screen.getByText(ro.library.unknownArtist)).toBeTruthy();
     expect(screen.getAllByText('5:48')).toHaveLength(2);
     expect(screen.getByText(ro.library.trackCount(2))).toBeTruthy();
+    expect(screen.getAllByText('124')).toHaveLength(2);
+    expect(screen.getAllByLabelText('Ton 8A, La minor')).toHaveLength(2);
+  });
+
+  it('marchează piesele neanalizate și arată progresul analizei', async () => {
+    mockApi({
+      'GET /api/tracks': () => [pending],
+      'GET /api/jobs/active': () => [
+        { id: 3, kind: 'analysis', status: 'running', progress: 0.25, error: null },
+      ],
+    });
+    renderWithProviders(<LibraryScreen />);
+
+    expect(await screen.findByText(`${ro.analysis.running} 25%`)).toBeTruthy();
+    expect(screen.getAllByLabelText(ro.analysis.pending)).toHaveLength(2); // BPM și ton
+    expect(screen.queryByText('8A')).toBeNull();
   });
 
   it('adaugă un folder, urmărește scanarea și reîncarcă piesele', async () => {
     let scanned = false;
     let polls = 0;
     const api = mockApi({
+      ...noJobs,
       'GET /api/tracks': () => (scanned ? [track] : []),
       'POST /api/library/folders': () =>
         Response.json({ folder_id: 1, job_id: 7 }, { status: 202 }),
@@ -65,6 +93,7 @@ describe('LibraryScreen', () => {
 
   it('arată eroarea API în toast-ul global', async () => {
     mockApi({
+      ...noJobs,
       'GET /api/tracks': () => [],
       'POST /api/library/folders': () =>
         Response.json(

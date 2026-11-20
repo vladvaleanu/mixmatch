@@ -1,3 +1,8 @@
+/** 124 → „124”; 123.5 → „123,5”. */
+export function formatBpm(bpm: number): string {
+  return Number.isInteger(bpm) ? String(bpm) : bpm.toFixed(1).replace('.', ',');
+}
+
 /** 312.4 → „5:12”; 3725 → „1:02:05”. */
 export function formatDuration(seconds: number): string {
   const total = Math.max(0, Math.round(seconds));

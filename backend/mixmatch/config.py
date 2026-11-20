@@ -25,6 +25,11 @@ class Settings:
     audio_extensions: frozenset[str] = frozenset({".mp3", ".flac", ".wav", ".aif", ".aiff", ".m4a"})
     # Fișierele mai scurte (sample-uri, jingle-uri) nu intră în bibliotecă.
     min_duration_s: float = 60.0
+    # Crește când se schimbă algoritmii de analiză: piesele analizate cu o versiune mai veche
+    # se reanalizează automat.
+    analysis_version: int = 1
+    # Câte piese se analizează în paralel (procese separate).
+    analysis_workers: int = field(default_factory=lambda: max(1, min(6, (os.cpu_count() or 2) - 2)))
 
     @property
     def db_url(self) -> str:

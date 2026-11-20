@@ -4,11 +4,12 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from mixmatch.analysis.runner import start_analysis_if_needed
 from mixmatch.api.deps import SessionDep
 from mixmatch.api.errors import ApiError, responses
 from mixmatch.db.models import Job, JobKind, JobStatus, LibraryFolder
 from mixmatch.db.session import SessionLocal
-from mixmatch.jobs import queue
+from mixmatch.jobs import Report, queue
 from mixmatch.library.scan import scan_folder
 
 router = APIRouter(tags=["library"])
@@ -30,7 +31,10 @@ class AddFolderOut(BaseModel):
     responses=responses(400, 409),
 )
 def add_library_folder(body: AddFolderIn, session: SessionDep) -> AddFolderOut:
-    """Adaugă un folder (sau îl rescanează, dacă există deja) și pornește scanarea."""
+    """Adaugă un folder (sau îl rescanează, dacă există deja) și pornește scanarea.
+
+    După scanare pornește automat analiza pieselor noi sau schimbate.
+    """
     path = Path(body.path.strip()).expanduser()
     if not body.path.strip() or not path.is_dir():
         raise ApiError(400, "folder_not_found", f"Folderul nu există: {body.path}")
@@ -51,7 +55,9 @@ def add_library_folder(body: AddFolderIn, session: SessionDep) -> AddFolderOut:
         session.commit()
     folder_id = folder.id
 
-    job_id, _ = queue.submit(
-        JobKind.scan, lambda report: scan_folder(folder_id, SessionLocal, report)
-    )
+    def scan_then_analyze(report: Report) -> None:
+        scan_folder(folder_id, SessionLocal, report)
+        start_analysis_if_needed(queue, SessionLocal)
+
+    job_id, _ = queue.submit(JobKind.scan, scan_then_analyze)
     return AddFolderOut(folder_id=folder_id, job_id=job_id)

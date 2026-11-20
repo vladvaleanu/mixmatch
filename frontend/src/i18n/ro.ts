@@ -21,6 +21,14 @@ export const ro = {
     ok: 'Server conectat',
     down: 'Serverul nu răspunde',
   },
+  key: {
+    label: (code: string, name: string | null) => (name ? `Ton ${code}, ${name}` : `Ton ${code}`),
+  },
+  analysis: {
+    running: 'Analizez piesele: tempo și ton…',
+    progressLabel: 'Progresul analizei',
+    pending: 'Se analizează',
+  },
   library: {
     title: 'Biblioteca ta',
     subtitle: 'Tempo, tonalitate și energie detectate automat la import.',
@@ -31,6 +39,8 @@ export const ro = {
     empty: 'Încă nu ai piese. Adaugă un folder și le găsim noi.',
     columns: {
       track: 'Piesă',
+      bpm: 'BPM',
+      key: 'Ton',
       duration: 'Durată',
     },
     unknownArtist: 'Artist necunoscut',
@@ -47,6 +57,7 @@ export const ro = {
     done: (n: number) => `Gata! Biblioteca are acum ${n === 1 ? '1 piesă' : `${n} piese`}.`,
     failed: 'Scanarea a eșuat:',
     shortSkipped: 'Fișierele mai scurte de un minut (sample-uri) nu intră în bibliotecă.',
+    analysisContinues: 'Tempo-ul și tonul se analizează acum în fundal; le vezi apărând în tabel.',
   },
   screens: {
     mixes: {
