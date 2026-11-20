@@ -17,6 +17,8 @@ Browserul (`frontend/src/audio/`) și ffmpeg (`export/`) execută același plan,
   corecția manuală când beat-urile nu cad împreună. E deja inclusă în `b_start_s`.
 """
 
+import bisect
+import itertools
 import math
 from dataclasses import dataclass
 from enum import StrEnum
@@ -53,6 +55,8 @@ ECHO_TAPS = 6  # repetări (0,45⁶ ≈ 0,8 %: restul nu se mai aude)
 ECHO_BEATS = 0.75  # întârzierea ecoului: trei sferturi de beat
 BASS_SHELF_HZ = 150.0
 PREVIEW_BARS = 4  # cât se aude înainte și după tranziție, la previzualizare
+MIN_LOCAL_BEATS = 8  # sub atâtea beat-uri în fereastră, tempo-ul local nu e de încredere
+MAX_LOCAL_DEVIATION = 0.02  # tempo local cu peste 2 % față de cel global = estimare greșită
 MAX_NUDGE_S = 1.0  # corecția manuală a lui B, în ambele sensuri
 CROSSFADE_STEPS = 8  # puncte pentru curba de putere constantă
 
@@ -67,6 +71,9 @@ class Side:
     intro_bars: int | None = None
     outro_bars: int | None = None
     loudness_lufs: float | None = None
+    # Toate beat-urile detectate (faza pe kick). Cu ele, punctele cad pe beat-uri reale și
+    # viteza lui B vine din tempo-ul local, nu din extrapolarea BPM-ului pe toată piesa.
+    beats: tuple[float, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -115,24 +122,51 @@ def total_bars(side: Side) -> int:
     return max(0, int((side.duration_s - side.first_beat_s) // bar_s(side.bpm)))
 
 
+def on_beat(t_s: float, side: Side) -> float:
+    """Cel mai apropiat beat detectat (fără beat-uri: momentul dat)."""
+    if not side.beats:
+        return round(t_s, 4)
+    beats = side.beats
+    i = bisect.bisect_left(beats, t_s)
+    candidates = beats[max(0, i - 1) : i + 1]
+    return round(min(candidates, key=lambda b: abs(b - t_s)), 4)
+
+
+def local_beat_s(side: Side, start_s: float, end_s: float) -> float | None:
+    """Durata unui beat în intervalul dat, din beat-urile detectate (regresie liniară)."""
+    if not side.beats:
+        return None
+    window = [b for b in side.beats if start_s - 0.01 <= b <= end_s]
+    if len(window) < MIN_LOCAL_BEATS:
+        return None
+    gaps = sorted(q - p for p, q in itertools.pairwise(window))
+    typical = gaps[len(gaps) // 2]
+    index = [round((b - window[0]) / typical) for b in window]
+    mean_i = sum(index) / len(index)
+    mean_t = sum(window) / len(window)
+    num = sum((i - mean_i) * (t - mean_t) for i, t in zip(index, window, strict=True))
+    den = sum((i - mean_i) ** 2 for i in index)
+    return num / den if den else None
+
+
 def snap_to_phrase(t_s: float, side: Side) -> float:
-    """Cel mai apropiat început de frază (multiplu de 8 bare de la primul beat)."""
+    """Cel mai apropiat început de frază (multiplu de 8 bare de la primul beat), pe un beat real."""
     bars = (t_s - side.first_beat_s) / bar_s(side.bpm)
     phrase = round(bars / PHRASE_BARS) * PHRASE_BARS
     phrase = min(max(phrase, 0), total_bars(side) // PHRASE_BARS * PHRASE_BARS)
-    return round(side.first_beat_s + phrase * bar_s(side.bpm), 3)
+    return on_beat(side.first_beat_s + phrase * bar_s(side.bpm), side)
 
 
 def default_a_out(a: Side, length_bars: int) -> float:
     """Tranziția se termină la finalul muzicii lui A și acoperă outro-ul (dacă e mai lung)."""
     start = total_bars(a) - max(a.outro_bars or 0, length_bars)
     start = max(0, start // PHRASE_BARS * PHRASE_BARS)
-    return round(a.first_beat_s + start * bar_s(a.bpm), 3)
+    return on_beat(a.first_beat_s + start * bar_s(a.bpm), a)
 
 
 def default_b_in(b: Side) -> float:
     """B intră de la primul beat: intro-ul ei se suprapune peste outro-ul lui A."""
-    return round(b.first_beat_s, 3)
+    return round(b.beats[0] if b.beats else b.first_beat_s, 4)
 
 
 def gain_db(loudness_lufs: float | None) -> float:
@@ -211,6 +245,25 @@ def _automations(style: Style, length: float) -> tuple[list[Automation], float]:
     ], length
 
 
+def _local_sync(
+    a: Side, b: Side, a_out: float, b_in: float, length: int, global_speed: float
+) -> tuple[float, float]:
+    """Viteza lui B și durata unui beat al lui A, din tempo-ul local din fereastra tranziției.
+
+    Cade pe valorile globale dacă lipsesc beat-urile sau estimarea locală pare greșită.
+    """
+    span_a = length * bar_s(a.bpm)
+    beat_a = local_beat_s(a, a_out, a_out + span_a)
+    beat_b = local_beat_s(b, b_in, b_in + span_a * global_speed)
+    if beat_a is None or beat_b is None:
+        return global_speed, 60.0 / a.bpm
+    multiple = a.bpm / (b.bpm * global_speed)  # 1, ½ sau 2 (jumătate/dublu)
+    speed = beat_b / beat_a / multiple
+    if abs(speed / global_speed - 1) > MAX_LOCAL_DEVIATION:
+        return global_speed, 60.0 / a.bpm
+    return speed, beat_a
+
+
 def build_plan(
     a: Side,
     b: Side,
@@ -222,14 +275,15 @@ def build_plan(
     b_nudge_s: float = 0.0,
 ) -> Plan:
     """Planul complet. `a_out_s` / `b_in_s` lipsă = puncte alese automat; date = lipite de frază."""
-    speed = sync_speed(a.bpm, b.bpm)
+    global_speed = sync_speed(a.bpm, b.bpm)
     nudge = round(min(max(b_nudge_s, -MAX_NUDGE_S), MAX_NUDGE_S), 4)
     b_in = snap_to_phrase(b_in_s, b) if b_in_s is not None else default_b_in(b)
     a_out = snap_to_phrase(a_out_s, a) if a_out_s is not None else default_a_out(a, length_bars)
     length = fit_length(length_bars, a, b, a_out, b_in)
     if a_out_s is None and length != length_bars:
         a_out = default_a_out(a, length)
-    length_s = round(length * bar_s(a.bpm), 3)
+    speed, beat_a = _local_sync(a, b, a_out, b_in, length, global_speed)
+    length_s = round(length * BEATS_PER_BAR * beat_a, 3)
     automations, b_audible_at = _automations(style, length_s)
     return Plan(
         style=style,

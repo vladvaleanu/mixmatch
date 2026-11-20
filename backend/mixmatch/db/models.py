@@ -79,6 +79,17 @@ class Track(Base):
         return func.coalesce(cls.energy_manual, cls.energy)
 
 
+class BeatGridRow(Base):
+    """Toate beat-urile unei piese (float32, secunde), cu faza corectată pe kick."""
+
+    __tablename__ = "beat_grids"
+
+    track_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True
+    )
+    beats: Mapped[bytes] = mapped_column(LargeBinary)
+
+
 class Waveform(Base):
     """Vârfurile formei de undă (octeți 0–255): previzualizare (40), listă (1000), editor (8000)."""
 

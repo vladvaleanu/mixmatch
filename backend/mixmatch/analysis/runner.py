@@ -11,12 +11,13 @@ from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
+import numpy as np
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from mixmatch.analysis.track import AnalysisResult, analyze_file
 from mixmatch.config import settings
-from mixmatch.db.models import JobKind, Track, Waveform, utcnow
+from mixmatch.db.models import BeatGridRow, JobKind, Track, Waveform, utcnow
 from mixmatch.jobs import JobQueue
 
 log = logging.getLogger(__name__)
@@ -59,6 +60,16 @@ def _save(session: Session, track_id: int, path: str, result: AnalysisResult) ->
         waveform.preview = result.peaks.preview
         waveform.peaks = result.peaks.lo
         waveform.peaks_hi = result.peaks.hi
+    grid = session.get(BeatGridRow, track_id)
+    if result.beats is None:
+        if grid is not None:
+            session.delete(grid)
+    else:
+        data = np.asarray(result.beats, dtype="<f4").tobytes()
+        if grid is None:
+            session.add(BeatGridRow(track_id=track_id, beats=data))
+        else:
+            grid.beats = data
     # Și o analiză eșuată primește versiunea curentă, ca să nu se reia la nesfârșit.
     track.analysis_version = settings.analysis_version
     track.analyzed_at = utcnow()

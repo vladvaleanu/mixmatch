@@ -1,5 +1,6 @@
 from typing import Literal
 
+import numpy as np
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -9,7 +10,7 @@ from mixmatch.api.deps import SessionDep
 from mixmatch.api.errors import ApiError, responses
 from mixmatch.api.mixes import load_mix
 from mixmatch.api.tracks import TrackOut
-from mixmatch.db.models import Mix, Track, Transition, Waveform
+from mixmatch.db.models import BeatGridRow, Mix, Track, Transition, Waveform
 from mixmatch.music.compat import Label, Problem, TrackInfo, match
 from mixmatch.music.transition_plan import (
     DEFAULT_LENGTH,
@@ -96,10 +97,13 @@ class TransitionPatch(BaseModel):
     )
 
 
-def _side(track: Track) -> Side | None:
+def _side(session: Session, track: Track) -> Side | None:
     if not track.bpm or track.first_beat_s is None:
         return None
+    grid = session.get(BeatGridRow, track.id)
+    beats = tuple(float(b) for b in np.frombuffer(grid.beats, dtype="<f4")) if grid else None
     return Side(
+        beats=beats,
         bpm=track.bpm,
         first_beat_s=track.first_beat_s,
         duration_s=track.duration_s,
@@ -122,7 +126,8 @@ def _settings(session: Session, mix: Mix, a: Track, b: Track) -> Transition | No
 
 def _out(session: Session, mix: Mix, position: int) -> TransitionOut:
     a, b = _pair(mix, position)
-    side_a, side_b, info_a, info_b = _side(a), _side(b), TrackInfo.of(a), TrackInfo.of(b)
+    side_a, side_b = _side(session, a), _side(session, b)
+    info_a, info_b = TrackInfo.of(a), TrackInfo.of(b)
     if not (side_a and side_b and info_a and info_b):
         raise ApiError(
             409, "not_analyzed", "Tranziția se poate planifica după analiza ambelor piese."

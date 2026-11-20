@@ -13,7 +13,7 @@ from mixmatch.analysis.runner import (
 )
 from mixmatch.analysis.track import analyze_file
 from mixmatch.config import settings
-from mixmatch.db.models import Job, JobStatus, LibraryFolder, Track, Waveform
+from mixmatch.db.models import BeatGridRow, Job, JobStatus, LibraryFolder, Track, Waveform
 from mixmatch.jobs import JobQueue
 from mixmatch.library.scan import scan_folder
 from tests.audio import make_audio, make_music
@@ -49,6 +49,7 @@ def test_detects_tempo_and_key(
     assert result.energy in range(1, 6)
     assert result.loudness_lufs is not None and -40 < result.loudness_lufs < 0
     assert result.peaks is not None and len(result.peaks.hi) == 8000
+    assert result.beats is not None and len(result.beats) > 20
     if bpm < 160:  # la ~174 BPM grila e decalată de eroarea de tempo (vezi nota pasului 3a)
         assert result.first_beat_s == pytest.approx(0.5, abs=0.06)  # primul kick e la 0,5 s
 
@@ -85,6 +86,9 @@ def test_analyze_pending_saves_results(
         assert tracks["8A.wav"].energy is not None
         assert session.get(Waveform, tracks["8A.wav"].id) is not None
         assert session.get(Waveform, tracks["stricat.wav"].id) is None
+        grid = session.get(BeatGridRow, tracks["8A.wav"].id)
+        assert grid is not None and len(grid.beats) % 4 == 0  # float32
+        assert session.get(BeatGridRow, tracks["stricat.wav"].id) is None
         # Și piesa stricată e marcată ca analizată, ca să nu fie reluată la nesfârșit.
         assert {t.analysis_version for t in tracks.values()} == {settings.analysis_version}
         assert all(t.analyzed_at for t in tracks.values())

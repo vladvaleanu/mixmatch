@@ -9,7 +9,7 @@ from mixmatch.analysis.energy import energy_level, extract_features
 from mixmatch.analysis.key import detect_key
 from mixmatch.analysis.loudness import integrated_lufs
 from mixmatch.analysis.structure import intro_outro_bars
-from mixmatch.analysis.tempo import detect_tempo
+from mixmatch.analysis.tempo import detect_beats
 from mixmatch.analysis.waveform import Peaks, compute_peaks
 
 log = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ class AnalysisResult:
     intro_bars: int | None = None
     outro_bars: int | None = None
     peaks: Peaks | None = None
+    beats: list[float] | None = None  # toate beat-urile, cu faza corectată
     error: str | None = None
 
 
@@ -34,7 +35,7 @@ def analyze_file(path: Path) -> AnalysisResult:
         if len(audio.mono) == 0:
             return AnalysisResult(error="fișier fără audio")
         mono = audio.mono
-        tempo = detect_tempo(mono)
+        tempo = detect_beats(mono)
         loudness = integrated_lufs(audio)
         energy = None
         structure = None
@@ -51,6 +52,7 @@ def analyze_file(path: Path) -> AnalysisResult:
             intro_bars=structure[0] if structure else None,
             outro_bars=structure[1] if structure else None,
             peaks=compute_peaks(mono),
+            beats=tempo.beats if tempo else None,
         )
     except Exception as exc:  # orice fișier stricat devine un rezultat gol, nu o oprire a jobului
         log.warning("Analiza a eșuat pentru %s: %s", path, exc)
