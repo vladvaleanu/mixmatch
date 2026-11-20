@@ -167,3 +167,24 @@ def test_suggestions_skip_the_mix_and_follow_the_curve(
     # Paper Lights (E4) și Driftwood (E2) sunt amândouă Lin după Neon Tide: curba decide.
     assert titles(f"?exclude_mix={mix_id}&target_energy=4")[0] == "Paper Lights"
     assert titles(f"?exclude_mix={mix_id}&target_energy=2")[0] == "Driftwood"
+
+
+def test_auto_order_proposes_without_saving(client: TestClient, analyzed: list[int]) -> None:
+    neon, slow, low, paper, drift = analyzed
+    order = [neon, low, slow, paper, drift]  # Low Sun (3B) se ciocnește cu toate celelalte
+    mix_id = client.post("/api/mixes", json={"track_ids": order}).json()["id"]
+
+    proposal = client.post(f"/api/mixes/{mix_id}/auto-order").json()
+
+    assert proposal["track_ids"][0] == neon
+    assert sorted(proposal["track_ids"]) == sorted(order)
+    assert proposal["changed"] is True
+    assert proposal["score"] > proposal["current_score"]
+    assert proposal["labels"].count("caution") <= proposal["current_labels"].count("caution")
+    assert [t["id"] for t in proposal["tracks"]] == proposal["track_ids"]
+    saved = client.get(f"/api/mixes/{mix_id}").json()
+    assert [t["id"] for t in saved["tracks"]] == order  # nesalvat
+
+
+def test_auto_order_unknown_mix(client: TestClient) -> None:
+    assert client.post("/api/mixes/999999/auto-order").json()["error"]["code"] == "mix_not_found"

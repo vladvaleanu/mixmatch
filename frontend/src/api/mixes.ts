@@ -118,3 +118,11 @@ export function useSetMixItems(mixId: number) {
     onSuccess: saved,
   });
 }
+
+/** Propune o ordine mai bună (nu o salvează; „Acceptă” trece prin `useSetMixItems`). */
+export function useAutoOrder(mixId: number) {
+  return useMutation({
+    mutationFn: () =>
+      unwrap(http.POST('/api/mixes/{mix_id}/auto-order', { params: { path: { mix_id: mixId } } })),
+  });
+}

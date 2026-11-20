@@ -204,3 +204,26 @@ def match(a: TrackInfo, b: TrackInfo) -> Match:
         tempo_label=parts[Problem.tempo],
         energy_label=parts.get(Problem.energy),
     )
+
+
+# Scorul unei ordini întregi (ordonarea automată). O tranziție „Atenție” costă cât o tranziție
+# bună întreagă, ca ordonarea să le evite înaintea oricărui alt câștig.
+CAUTION_PENALTY = 100.0
+UNKNOWN_PAIR_SCORE = 40.0  # o piesă neanalizată: nici bine, nici rău
+
+
+def pair_value(a: TrackInfo | None, b: TrackInfo | None) -> float:
+    """Cât valorează tranziția A → B într-o ordine (scorul, minus penalizarea pentru Atenție)."""
+    if a is None or b is None:
+        return UNKNOWN_PAIR_SCORE
+    result = match(a, b)
+    return result.score - (CAUTION_PENALTY if result.label == Label.caution else 0.0)
+
+
+def curve_cost(energies: list[int | None], targets: list[float] | None) -> float:
+    """Cât se abate energia ordinii de la curba dorită (aceeași pondere ca la sugestii)."""
+    if targets is None:
+        return 0.0
+    return CURVE_PENALTY * sum(
+        abs(e - t) for e, t in zip(energies, targets, strict=True) if e is not None
+    )

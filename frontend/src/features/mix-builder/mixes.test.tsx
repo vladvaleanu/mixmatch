@@ -289,6 +289,59 @@ describe('Raportul mixului', () => {
   });
 });
 
+describe('Ordonarea automată', () => {
+  it('arată propunerea și o salvează la „Acceptă”', async () => {
+    const api = mockApi({
+      'GET /api/mixes/7': () => mix([a, c, b]),
+      'GET /api/mixes/7/report': () => report([a, c, b]),
+      'GET /api/tracks/2/matches': () => [],
+      'GET /api/tracks/3/matches': () => [],
+      'POST /api/mixes/7/auto-order': () => ({
+        track_ids: [1, 2, 3],
+        tracks: [a, b, c],
+        changed: true,
+        score: 180,
+        current_score: 20,
+        labels: ['smooth', 'smooth'],
+        current_labels: ['caution', 'good'],
+      }),
+      'PUT /api/mixes/7/items': () => mix([a, b, c]),
+    });
+    renderBuilder();
+
+    fireEvent.click(await screen.findByRole('button', { name: ro.autoOrder.button }));
+    expect(await screen.findByText(ro.autoOrder.caution(1, 0))).toBeTruthy();
+    expect(screen.getByText(ro.autoOrder.smooth(0, 2))).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: ro.autoOrder.accept }));
+    await waitFor(async () =>
+      expect(await body(api, 'PUT', '/api/mixes/7/items')).toEqual({ track_ids: [1, 2, 3] }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('spune când ordinea e deja cea mai bună', async () => {
+    mockApi({
+      'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(),
+      'GET /api/tracks/3/matches': () => [],
+      'POST /api/mixes/7/auto-order': () => ({
+        track_ids: [1, 2, 3],
+        tracks: [a, b, c],
+        changed: false,
+        score: 180,
+        current_score: 180,
+        labels: ['smooth', 'smooth'],
+        current_labels: ['smooth', 'smooth'],
+      }),
+    });
+    renderBuilder();
+    fireEvent.click(await screen.findByRole('button', { name: ro.autoOrder.button }));
+    expect(await screen.findByText(ro.autoOrder.unchanged)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: ro.autoOrder.accept })).toBeNull();
+  });
+});
+
 describe('Adaugă în mix (Biblioteca)', () => {
   const summary = {
     id: 7,

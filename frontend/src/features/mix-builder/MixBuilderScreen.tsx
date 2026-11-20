@@ -18,6 +18,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import type { Schemas } from '../../api/client';
 import {
+  useAutoOrder,
   useDeleteMix,
   useMix,
   useMixReport,
@@ -34,6 +35,7 @@ import { PlusIcon } from '../../ui/PlusIcon';
 import { Segmented } from '../../ui/Segmented';
 import { useActiveMix } from './activeMixStore';
 import { AddTrackDialog } from './AddTrackDialog';
+import { AutoOrderDialog } from './AutoOrderDialog';
 import { EnergyCurve } from './EnergyCurve';
 import { CARD_WIDTH, MixTrackCard } from './MixTrackCard';
 import { NextSuggestions } from './NextSuggestions';
@@ -320,6 +322,7 @@ export function MixBuilderScreen() {
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const autoOrder = useAutoOrder(mixId);
 
   useEffect(() => {
     if (mix.data) setActive(mix.data.id); // „Adaugă în mix” din Bibliotecă țintește mixul deschis
@@ -380,7 +383,29 @@ export function MixBuilderScreen() {
                 ` · ${ro.mixes.bpmRange(formatBpm(first), formatBpm(last))}`}
             </p>
           </div>
-          <Button onClick={() => setConfirming(true)}>{ro.builder.delete}</Button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: space[8] }}>
+            <Button
+              disabled={tracks.length < 3 || autoOrder.isPending}
+              onClick={() => autoOrder.mutate()}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7h11M4 12h7M4 17h4" />
+                <path d="M18 5v14M15 16l3 3 3-3" />
+              </svg>
+              {autoOrder.isPending ? ro.autoOrder.working : ro.autoOrder.button}
+            </Button>
+            <Button onClick={() => setConfirming(true)}>{ro.builder.delete}</Button>
+          </div>
         </div>
 
         <CurveCard mix={data} report={current ?? report.data} />
@@ -398,6 +423,16 @@ export function MixBuilderScreen() {
             inMix={new Set(tracks.map((t) => t.id))}
             onAdd={(track) => setItems.mutate([...tracks, track])}
             onClose={() => setAdding(false)}
+          />
+        )}
+        {autoOrder.data && (
+          <AutoOrderDialog
+            proposal={autoOrder.data}
+            onAccept={() => {
+              setItems.mutate(autoOrder.data.tracks);
+              autoOrder.reset();
+            }}
+            onClose={() => autoOrder.reset()}
           />
         )}
         {confirming && (

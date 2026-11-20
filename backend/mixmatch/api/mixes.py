@@ -10,8 +10,9 @@ from mixmatch.api.deps import SessionDep
 from mixmatch.api.errors import ApiError, responses
 from mixmatch.api.tracks import TrackOut
 from mixmatch.db.models import Mix, MixItem, Track, Waveform, utcnow
+from mixmatch.mixes.auto_order import Candidate, auto_order
 from mixmatch.mixes.report import build_report
-from mixmatch.music.compat import Label, Problem
+from mixmatch.music.compat import Label, Problem, TrackInfo
 from mixmatch.music.energy_curve import EnergyShape
 
 router = APIRouter(tags=["mixes"])
@@ -227,4 +228,42 @@ def get_mix_report(mix_id: int, session: SessionDep) -> ReportOut:
             WarningOut(position=w.position, problem=w.problem, message=w.message)
             for w in report.warnings
         ],
+    )
+
+
+class AutoOrderOut(BaseModel):
+    track_ids: list[int]  # ordinea propusă (prima piesă rămâne prima)
+    tracks: list[TrackOut]  # piesele în ordinea propusă
+    changed: bool  # propunerea diferă de ordinea actuală
+    score: float  # scorul ordinii propuse (≥ scorul ordinii actuale)
+    current_score: float
+    labels: list[Label | None]  # eticheta fiecărei tranziții din ordinea propusă
+    current_labels: list[Label | None]
+
+
+@router.post("/mixes/{mix_id}/auto-order", operation_id="auto_order_mix", responses=responses(404))
+def auto_order_mix(mix_id: int, session: SessionDep) -> AutoOrderOut:
+    """Propune o ordine mai bună (tranziții și curba de energie). Nu o salvează."""
+    mix = load_mix(session, mix_id)
+    tracks = [item.track for item in mix.items]
+    proposal = auto_order(
+        [Candidate(key=t.id, info=TrackInfo.of(t)) for t in tracks], mix.energy_shape
+    )
+    by_id = {t.id: t for t in tracks}
+    proposed = [by_id[i] for i in proposal.order]
+
+    def labels(order: list[Track]) -> list[Label | None]:
+        report = build_report(order, mix.energy_shape)
+        return [t.match.label if t.match else None for t in report.transitions]
+
+    out = _out(session, mix)
+    by_out = {t.id: t for t in out.tracks}
+    return AutoOrderOut(
+        track_ids=proposal.order,
+        tracks=[by_out[t.id] for t in proposed],
+        changed=proposal.order != [t.id for t in tracks],
+        score=proposal.score,
+        current_score=proposal.original_score,
+        labels=labels(proposed),
+        current_labels=labels(tracks),
     )

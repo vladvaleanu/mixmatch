@@ -285,6 +285,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mixes/{mix_id}/auto-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auto Order Mix
+         * @description Propune o ordine mai bună (tranziții și curba de energie). Nu o salvează.
+         */
+        post: operations["auto_order_mix"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mixes/{mix_id}/transitions/{position}/plan": {
         parameters: {
             query?: never;
@@ -340,6 +360,23 @@ export interface components {
             folder_id: number;
             /** Job Id */
             job_id: number;
+        };
+        /** AutoOrderOut */
+        AutoOrderOut: {
+            /** Track Ids */
+            track_ids: number[];
+            /** Tracks */
+            tracks: components["schemas"]["TrackOut"][];
+            /** Changed */
+            changed: boolean;
+            /** Score */
+            score: number;
+            /** Current Score */
+            current_score: number;
+            /** Labels */
+            labels: (components["schemas"]["Label"] | null)[];
+            /** Current Labels */
+            current_labels: (components["schemas"]["Label"] | null)[];
         };
         /** AutomationOut */
         AutomationOut: {
@@ -1313,6 +1350,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auto_order_mix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutoOrderOut"];
                 };
             };
             /** @description Not Found */

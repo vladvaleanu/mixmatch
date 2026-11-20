@@ -244,6 +244,18 @@ export const ro = {
     stop: 'Oprește',
     notAnalyzed: 'Tranziția se poate planifica după analiza ambelor piese.',
   },
+  autoOrder: {
+    button: 'Ordonează automat',
+    title: 'Ordinea propusă',
+    intro:
+      'Prima piesă rămâne pe loc. Restul sunt ordonate după ton, tempo și curba de energie aleasă.',
+    caution: (before: number, after: number) => `Tranziții „Atenție”: ${before} → ${after}`,
+    smooth: (before: number, after: number) => `Tranziții „Lin”: ${before} → ${after}`,
+    unchanged: 'Ordinea ta e deja cea mai bună pe care am găsit-o.',
+    accept: 'Acceptă',
+    reject: 'Renunță',
+    working: 'Caut o ordine mai bună…',
+  },
   addToMix: {
     add: (name: string) => `Adaugă în „${name}”`,
     addNew: 'Adaugă într-un mix nou',
