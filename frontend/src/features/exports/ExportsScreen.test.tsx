@@ -62,6 +62,6 @@ describe('Exporturi', () => {
   it('spune când nu există exporturi', async () => {
     mockApi({ 'GET /api/exports': () => [] });
     renderWithProviders(<ExportsScreen />);
-    expect(await screen.findByText(ro.screens.exports.empty)).toBeTruthy();
+    expect(await screen.findByText(ro.empty.exportsTitle)).toBeTruthy();
   });
 });

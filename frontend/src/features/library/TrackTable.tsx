@@ -87,6 +87,7 @@ export function TrackTable({ tracks }: Props) {
           {tracks.map((track) => (
             <tr
               key={track.id}
+              id={`track-row-${track.id}`}
               onClick={() => select(track.id)}
               aria-selected={track.id === selectedId}
               style={{

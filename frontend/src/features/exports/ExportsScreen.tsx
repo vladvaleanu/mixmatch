@@ -4,6 +4,7 @@ import { exportFileUrl, useExports } from '../../api/exports';
 import { ro } from '../../i18n/ro';
 import { color, font, fontSize, radius, space } from '../../theme/tokens';
 import { formatMinutes } from '../../ui/format';
+import { EmptyState } from '../../ui/EmptyState';
 import { ProgressBar } from '../../ui/ProgressBar';
 import { ScreenHeader } from '../../ui/ScreenHeader';
 
@@ -35,7 +36,15 @@ export function ExportsScreen() {
       {exports.isPending ? (
         <p style={{ margin: 0, color: color.textMuted }}>{e.loading}</p>
       ) : exports.data?.length === 0 ? (
-        <p style={{ margin: 0, color: color.textMuted }}>{e.empty}</p>
+        <EmptyState
+          title={ro.empty.exportsTitle}
+          text={ro.empty.exportsText}
+          action={
+            <Link to="/mixuri" style={{ color: color.accent }}>
+              {ro.empty.exportsAction}
+            </Link>
+          }
+        />
       ) : (
         <ul
           style={{

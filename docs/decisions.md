@@ -5,6 +5,8 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Scurtături: Spațiu (play/pauză pe piesa selectată), ↑ ↓ sau K J (piesa anterioară/următoare), „/” (caută), „?” (lista); tac cât scrii într-un câmp sau cât e deschisă o fereastră; butonul „?” din bara de sus le face vizibile | Navigare rapidă fără să intre în conflict cu câmpurile |
+| 2026-11-20 | Stări goale cu `ui/EmptyState` (titlu, explicație, o acțiune) pentru Biblioteca goală și Exporturi | Un utilizator nou știe ce are de făcut |
 | 2026-11-20 | Colecțiile țin loc și de tag-uri: o piesă poate fi în oricâte; tabelele `collections` (nume unic) și `collection_tracks`; „Adăugate recent” = sortarea `recent` după `tracks.added_at` (coloană nouă; piesele existente primesc momentul migrării) | Fără două sisteme care fac același lucru |
 | 2026-11-20 | API: `GET/POST /collections`, `PATCH`/`DELETE /collections/{id}`, `PUT`/`DELETE /collections/{id}/tracks/{track_id}`; `GET /tracks?collection=`; `TrackOut.collection_ids` | Bara laterală și panoul piesei |
 | 2026-11-20 | Colecția aleasă și sortarea sunt navigare: „Șterge filtrele” nu le resetează | Ce ai ales în „Colecții” rămâne |

@@ -56,6 +56,7 @@ export function LibrarySearch() {
         <path d="M20 20l-3.5-3.5" />
       </svg>
       <input
+        id="library-search"
         type="search"
         aria-label={ro.filters.search}
         placeholder={ro.filters.searchPlaceholder}

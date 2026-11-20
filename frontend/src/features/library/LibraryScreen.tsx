@@ -5,6 +5,8 @@ import type { TrackFilters } from '../../api/tracks';
 import { useTracks } from '../../api/tracks';
 import { ro } from '../../i18n/ro';
 import { color, radius, space } from '../../theme/tokens';
+import { Button } from '../../ui/Button';
+import { EmptyState } from '../../ui/EmptyState';
 import { ScreenHeader } from '../../ui/ScreenHeader';
 import { AddFolderDialog } from './AddFolderDialog';
 import { AnalysisBanner } from './AnalysisBanner';
@@ -15,6 +17,7 @@ import { useSelectedTrack } from './selectionStore';
 import { Sidebar } from './Sidebar';
 import { TrackPanel } from './TrackPanel';
 import { TrackTable } from './TrackTable';
+import { useLibraryShortcuts } from './useLibraryShortcuts';
 import { UploadDialog } from './UploadDialog';
 
 function FolderIcon() {
@@ -48,6 +51,7 @@ export function LibraryScreen() {
   const count = tracks.data?.length ?? 0;
   const filtered = hasActiveFilters(filters);
   const upload = useUploadTracks();
+  useLibraryShortcuts(tracks.data);
   const [dragging, setDragging] = useState(false);
   const [dropped, setDropped] = useState<number | null>(null);
 
@@ -189,7 +193,15 @@ export function LibraryScreen() {
             </button>
           </p>
         ) : (
-          <p style={{ margin: 0, color: color.textMuted }}>{ro.library.empty}</p>
+          <EmptyState
+            title={ro.empty.libraryTitle}
+            text={ro.empty.libraryText}
+            action={
+              <Button variant="primary" onClick={() => setOpen(true)}>
+                {ro.empty.libraryAction}
+              </Button>
+            }
+          />
         )}
 
         {open && <AddFolderDialog onClose={() => setOpen(false)} />}

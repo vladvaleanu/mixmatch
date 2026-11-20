@@ -7,13 +7,22 @@ import { LibrarySearch } from './features/library/LibrarySearch';
 import { MixBuilderScreen } from './features/mix-builder/MixBuilderScreen';
 import { MixesScreen } from './features/mix-builder/MixesScreen';
 import { TransitionScreen } from './features/transition/TransitionScreen';
+import { ShortcutsHelp } from './ui/ShortcutsHelp';
 import { Toast } from './ui/Toast';
 import { TopBar } from './ui/TopBar';
 
 export function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <TopBar search={<LibrarySearch />} actions={<ImportButton />} />
+      <TopBar
+        search={<LibrarySearch />}
+        actions={
+          <>
+            <ShortcutsHelp />
+            <ImportButton />
+          </>
+        }
+      />
       <main style={{ flex: 1, display: 'flex' }}>
         <Routes>
           <Route path="/" element={<Navigate to="/biblioteca" replace />} />

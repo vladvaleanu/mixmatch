@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { player } from '../../audio/engine';
 import { ro } from '../../i18n/ro';
 import { mockApi, renderWithProviders } from '../../testing';
 import { Toast } from '../../ui/Toast';
@@ -213,7 +214,7 @@ describe('LibraryScreen', () => {
       },
     });
     renderWithProviders(<LibraryScreen />);
-    expect(await screen.findByText(ro.library.empty)).toBeTruthy();
+    expect(await screen.findByText(ro.empty.libraryTitle)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: ro.library.addFolderZone }));
     const input = screen.getByLabelText(ro.addFolder.pathLabel);
@@ -295,6 +296,38 @@ describe('LibraryScreen', () => {
     );
   });
 
+  it('scurtături: săgeți pentru selecție, spațiu pentru play, ignorate cât scrii', async () => {
+    const second = { ...track, id: 2, title: 'Slow Orbit' };
+    mockApi({
+      ...noJobs,
+      'GET /api/tracks': () => [track, second],
+      'GET /api/tracks/1/waveform': () => ({ peaks: [] }),
+      'GET /api/tracks/1/matches': () => [],
+      'GET /api/tracks/2/waveform': () => ({ peaks: [] }),
+      'GET /api/tracks/2/matches': () => [],
+    });
+    const toggle = vi.spyOn(player, 'toggle').mockImplementation(() => undefined);
+    // jsdom nu are scrollIntoView (browserele da).
+    Element.prototype.scrollIntoView = vi.fn();
+    renderWithProviders(<LibraryScreen />);
+    await screen.findAllByText('Paper Lights');
+
+    fireEvent.keyDown(document.body, { key: 'ArrowDown' });
+    expect(useSelectedTrack.getState().id).toBe(1);
+    fireEvent.keyDown(document.body, { key: 'j' });
+    expect(useSelectedTrack.getState().id).toBe(2);
+    fireEvent.keyDown(document.body, { key: 'ArrowUp' });
+    expect(useSelectedTrack.getState().id).toBe(1);
+
+    fireEvent.keyDown(document.body, { key: ' ' });
+    expect(toggle).toHaveBeenCalledWith(1, '/api/tracks/1/audio', 348);
+
+    // Cât scrii într-un câmp, tastele sunt ale câmpului.
+    const bpm = screen.getByLabelText(ro.filters.bpmMin);
+    fireEvent.keyDown(bpm, { key: 'ArrowDown' });
+    expect(useSelectedTrack.getState().id).toBe(1);
+  });
+
   it('arată eroarea API în toast-ul global', async () => {
     mockApi({
       ...noJobs,
@@ -311,7 +344,7 @@ describe('LibraryScreen', () => {
         <Toast />
       </>,
     );
-    await screen.findByText(ro.library.empty);
+    await screen.findByText(ro.empty.libraryTitle);
 
     fireEvent.click(screen.getByRole('button', { name: ro.library.addFolderZone }));
     fireEvent.change(screen.getByLabelText(ro.addFolder.pathLabel), { target: { value: '/x' } });

@@ -62,6 +62,24 @@ export const ro = {
     },
     noResults: 'Nicio piesă nu se potrivește filtrelor.',
   },
+  shortcuts: {
+    title: 'Scurtături de tastatură',
+    play: 'Play / pauză pentru piesa selectată',
+    move: 'Piesa anterioară / următoare din tabel',
+    search: 'Caută în bibliotecă',
+    help: 'Lista asta',
+    close: 'Închide o fereastră',
+  },
+  empty: {
+    libraryTitle: 'Biblioteca ta e goală',
+    libraryText:
+      'Trage aici un folder cu muzică sau apasă „Adaugă un folder”. Tempo-ul, tonul și energia se analizează pe calculatorul tău; fișierele rămân unde sunt.',
+    libraryAction: 'Adaugă un folder',
+    exportsTitle: 'Niciun export încă',
+    exportsText:
+      'Deschide un mix și apasă „Exportă”. Aici apar fișierul audio, tracklistul și .cue, gata de descărcat.',
+    exportsAction: 'Mergi la mixuri',
+  },
   collections: {
     title: 'Colecții',
     all: 'Toate piesele',
@@ -114,7 +132,6 @@ export const ro = {
     dropNow: 'Lasă fișierele aici',
     trackCount: (n: number) => (n === 1 ? '1 piesă' : `${n} piese`),
     loading: 'Se încarcă biblioteca…',
-    empty: 'Încă nu ai piese. Adaugă un folder și le găsim noi.',
     columns: {
       play: 'Ascultă',
       track: 'Piesă',
@@ -305,7 +322,6 @@ export const ro = {
     exports: {
       title: 'Exporturi',
       subtitle: 'Mixurile randate, cu tracklistul și fișierul .cue.',
-      empty: 'Încă nu ai exportat niciun mix. Deschide un mix și apasă „Exportă”.',
       loading: 'Se încarcă exporturile…',
       rendering: (pct: number) => `Se randează… ${pct}%`,
       failed: 'Exportul a eșuat:',
