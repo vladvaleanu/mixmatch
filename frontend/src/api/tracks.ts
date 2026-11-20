@@ -16,6 +16,7 @@ export type TrackFilters = {
   energy: number[];
   key: string[];
   compatible_with: number | null;
+  collection: number | null; // colecția aleasă în bara laterală
   sort: NonNullable<ListQuery['sort']>;
 };
 
@@ -27,6 +28,7 @@ function toQuery(f: TrackFilters): ListQuery {
     energy: f.energy.length ? f.energy : undefined,
     key: f.key.length ? f.key : undefined,
     compatible_with: f.compatible_with ?? undefined,
+    collection: f.collection ?? undefined,
     sort: f.sort,
   };
 }

@@ -9,6 +9,7 @@ import { EnergyDots } from '../../ui/EnergyDots';
 import { formatBpm, formatDuration } from '../../ui/format';
 import { Waveform } from '../../ui/Waveform';
 import { AddToMixButton } from './AddToMixButton';
+import { CollectionToggles } from './CollectionToggles';
 import { MatchList } from './MatchList';
 import { TrackPlayButton } from './TrackPlayButton';
 
@@ -127,6 +128,8 @@ export function TrackPanel({ track }: { track: Track | undefined }) {
       </div>
 
       <AddToMixButton track={track} />
+
+      <CollectionToggles track={track} />
 
       <MatchList track={track} />
     </div>

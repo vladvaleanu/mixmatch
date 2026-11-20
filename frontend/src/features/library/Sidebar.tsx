@@ -3,6 +3,7 @@ import { useState, type CSSProperties } from 'react';
 import type { Schemas } from '../../api/client';
 import { ro } from '../../i18n/ro';
 import { color, fontSize, keyColor, radius, size, space } from '../../theme/tokens';
+import { CollectionsNav } from './CollectionsNav';
 import { hasActiveFilters, useFilters } from './filterStore';
 
 const KEY_CODES = Array.from({ length: 12 }, (_, i) => [`${i + 1}A`, `${i + 1}B`]).flat();
@@ -55,6 +56,7 @@ export function Sidebar({ selected }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: space[28] }}>
+      <CollectionsNav />
       <section style={{ display: 'flex', flexDirection: 'column', gap: space[12] }}>
         <h2 style={heading}>{ro.filters.title}</h2>
 

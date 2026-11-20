@@ -36,7 +36,7 @@ function FolderIcon() {
   );
 }
 
-const SORTS: TrackFilters['sort'][] = ['title', 'bpm', 'key', 'energy', 'duration'];
+const SORTS: TrackFilters['sort'][] = ['title', 'bpm', 'key', 'energy', 'duration', 'recent'];
 
 export function LibraryScreen() {
   const { filters, set, reset } = useFilters();

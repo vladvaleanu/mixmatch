@@ -15,6 +15,7 @@ export const emptyFilters: TrackFilters = {
   energy: [],
   key: [],
   compatible_with: null,
+  collection: null,
   sort: 'title',
 };
 
@@ -22,7 +23,11 @@ export const emptyFilters: TrackFilters = {
 export const useFilters = create<FilterState>((set) => ({
   filters: emptyFilters,
   set: (patch) => set((state) => ({ filters: { ...state.filters, ...patch } })),
-  reset: () => set((state) => ({ filters: { ...emptyFilters, sort: state.filters.sort } })),
+  // Colecția și sortarea sunt navigare, nu filtre: rămân.
+  reset: () =>
+    set((state) => ({
+      filters: { ...emptyFilters, sort: state.filters.sort, collection: state.filters.collection },
+    })),
 }));
 
 export function hasActiveFilters(f: TrackFilters): boolean {

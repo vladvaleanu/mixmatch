@@ -8,10 +8,11 @@ from sqlalchemy import or_, select
 
 from mixmatch.api.deps import SessionDep
 from mixmatch.api.errors import ApiError, responses
-from mixmatch.db.models import MixItem, Track, Waveform
+from mixmatch.db.models import CollectionTrack, MixItem, Track, Waveform
 from mixmatch.library.playback import MAX_CLIP_S, playable_file, render_clip
 from mixmatch.music.camelot import classic_name, parse
 from mixmatch.music.compat import Label, TrackInfo, match, suggestion_rank
+from mixmatch.text import sort_key
 
 router = APIRouter(tags=["tracks"])
 
@@ -32,9 +33,12 @@ class TrackOut(BaseModel):
     outro_bars: int | None
     waveform_preview: list[int] | None  # 40 de vârfuri 0–255, pentru rândul din tabel
     analyzed: bool  # false cât timp piesa așteaptă analiza
+    collection_ids: list[int] = []  # colecțiile în care e piesa
 
     @classmethod
-    def from_track(cls, track: Track, preview: bytes | None) -> "TrackOut":
+    def from_track(
+        cls, track: Track, preview: bytes | None, collection_ids: list[int] | None = None
+    ) -> "TrackOut":
         return cls(
             id=track.id,
             title=track.title,
@@ -49,6 +53,7 @@ class TrackOut(BaseModel):
             outro_bars=track.outro_bars,
             waveform_preview=list(preview) if preview else None,
             analyzed=track.analyzed_at is not None,
+            collection_ids=collection_ids or [],
         )
 
 
@@ -63,7 +68,7 @@ def _get_track(session: SessionDep, track_id: int) -> Track:
     return track
 
 
-Sort = Literal["title", "bpm", "key", "energy", "duration"]
+Sort = Literal["title", "bpm", "key", "energy", "duration", "recent"]
 CamelotCode = Annotated[str, Field(pattern=r"^(1[0-2]|[1-9])[AB]$")]
 
 
@@ -71,7 +76,7 @@ def _sort_key(sort: Sort):  # type: ignore[no-untyped-def]
     """Piesele fără valoare (neanalizate) ajung la final."""
     missing = float("inf")
     return {
-        "title": lambda t: (t.title.casefold(), t.id),
+        "title": lambda t: (sort_key(t.title), t.id),
         "bpm": lambda t: (t.bpm if t.bpm is not None else missing, t.id),
         "key": lambda t: (parse(t.key_camelot) if t.key_camelot else (99, "Z"), t.id),
         "energy": lambda t: (
@@ -79,6 +84,7 @@ def _sort_key(sort: Sort):  # type: ignore[no-untyped-def]
             t.id,
         ),
         "duration": lambda t: (t.duration_s, t.id),
+        "recent": lambda t: (-t.added_at.timestamp(), -t.id),  # cele mai noi primele
     }[sort]
 
 
@@ -91,6 +97,7 @@ def list_tracks(
     energy: Annotated[list[Annotated[int, Field(ge=1, le=5)]] | None, Query()] = None,
     key: Annotated[list[CamelotCode] | None, Query()] = None,
     compatible_with: int | None = None,
+    collection: int | None = None,
     sort: Sort = "title",
 ) -> list[TrackOut]:
     """Biblioteca, cu filtre. `compatible_with`: doar piesele care merg (Lin sau Bun) după ea."""
@@ -106,6 +113,12 @@ def list_tracks(
         query = query.where(Track.energy_effective.in_(energy))
     if key:
         query = query.where(Track.key_camelot.in_(key))
+    if collection is not None:
+        query = query.where(
+            Track.id.in_(
+                select(CollectionTrack.track_id).where(CollectionTrack.collection_id == collection)
+            )
+        )
     rows = [(track, preview) for track, preview in session.execute(query)]
 
     if compatible_with is not None:
@@ -120,7 +133,19 @@ def list_tracks(
             and match(reference, info).label != Label.caution
         ]
     rows.sort(key=lambda row: _sort_key(sort)(row[0]))
-    return [TrackOut.from_track(track, preview) for track, preview in rows]
+    memberships = _collections_of(session)
+    return [
+        TrackOut.from_track(track, preview, memberships.get(track.id)) for track, preview in rows
+    ]
+
+
+def _collections_of(session: SessionDep) -> dict[int, list[int]]:
+    out: dict[int, list[int]] = {}
+    for track_id, collection_id in session.execute(
+        select(CollectionTrack.track_id, CollectionTrack.collection_id)
+    ):
+        out.setdefault(track_id, []).append(collection_id)
+    return out
 
 
 class MatchOut(BaseModel):
@@ -198,7 +223,7 @@ def update_track(track_id: int, body: TrackPatch, session: SessionDep) -> TrackO
     track.energy_manual = body.energy_manual
     session.commit()
     preview = session.scalar(select(Waveform.preview).where(Waveform.track_id == track_id))
-    return TrackOut.from_track(track, preview)
+    return TrackOut.from_track(track, preview, _collections_of(session).get(track_id))
 
 
 @router.get(

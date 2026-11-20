@@ -25,6 +25,7 @@ const track = {
   outro_bars: 32,
   waveform_preview: Array.from({ length: 40 }, (_, i) => i * 6),
   analyzed: true,
+  collection_ids: [] as number[],
 };
 const pending = {
   ...track,
@@ -35,7 +36,11 @@ const pending = {
   waveform_preview: null,
   analyzed: false,
 };
-const noJobs = { 'GET /api/jobs/active': () => [], 'GET /api/mixes': () => [] };
+const noJobs = {
+  'GET /api/jobs/active': () => [],
+  'GET /api/mixes': () => [],
+  'GET /api/collections': () => [],
+};
 
 afterEach(() => {
   cleanup();
@@ -250,6 +255,44 @@ describe('LibraryScreen', () => {
     const sent = form?.getAll('files') ?? [];
     expect(sent).toHaveLength(1);
     expect(await (sent[0] as Blob).text()).toBe('x');
+  });
+
+  it('creează o colecție, filtrează după ea și pune piesa în ea din panou', async () => {
+    let collections = [{ id: 4, name: 'Vârf de seară', track_count: 0 }];
+    const api = mockApi({
+      ...noJobs,
+      'GET /api/collections': () => collections,
+      'POST /api/collections': () => {
+        collections = [...collections, { id: 5, name: 'Încălzire', track_count: 0 }];
+        return Response.json({ id: 5, name: 'Încălzire', track_count: 0 }, { status: 201 });
+      },
+      'GET /api/tracks': () => [track],
+      'GET /api/tracks/1/waveform': () => ({ peaks: [] }),
+      'GET /api/tracks/1/matches': () => [],
+      'PUT /api/collections/4/tracks/1': () => ({ id: 4, name: 'Vârf de seară', track_count: 1 }),
+    });
+    renderWithProviders(<LibraryScreen />);
+
+    fireEvent.click(await screen.findByRole('button', { name: ro.collections.create }));
+    const input = screen.getByLabelText(ro.collections.nameLabel);
+    fireEvent.change(input, { target: { value: ' Încălzire ' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(lastQuery(api).get('collection')).toBe('5')); // colecția nouă devine activă
+    const post = api.mock.calls.map(([r]) => r as Request).find((r) => r.method === 'POST');
+    expect(await post?.clone().json()).toEqual({ name: 'Încălzire' });
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Vârf de seară/ }));
+    await waitFor(() => expect(lastQuery(api).get('collection')).toBe('4'));
+    fireEvent.click(screen.getByRole('button', { name: ro.collections.recent }));
+    await waitFor(() => expect(lastQuery(api).get('sort')).toBe('recent'));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Paper Lights' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: ro.collections.toggle('Vârf de seară') }),
+    );
+    await waitFor(() =>
+      expect(api.mock.calls.some(([r]) => (r as Request).method === 'PUT')).toBe(true),
+    );
   });
 
   it('arată eroarea API în toast-ul global', async () => {

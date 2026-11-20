@@ -63,6 +63,10 @@ class Track(Base):
     outro_bars: Mapped[int | None]
     analysis_version: Mapped[int | None]
     analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Când a intrat piesa în bibliotecă („Adăugate recent”).
+    added_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=func.current_timestamp()
+    )
 
     waveform: Mapped["Waveform | None"] = relationship(
         back_populates="track", cascade="all, delete-orphan", passive_deletes=True, lazy="raise"
@@ -218,3 +222,24 @@ class Export(Base):
     path: Mapped[str] = mapped_column(Text)
     duration_s: Mapped[float | None]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Collection(Base):
+    """O colecție de piese a utilizatorului; ține loc și de tag (o piesă poate fi în mai multe)."""
+
+    __tablename__ = "collections"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CollectionTrack(Base):
+    __tablename__ = "collection_tracks"
+
+    collection_id: Mapped[int] = mapped_column(
+        ForeignKey("collections.id", ondelete="CASCADE"), primary_key=True
+    )
+    track_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True, index=True
+    )

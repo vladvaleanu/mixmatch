@@ -5,6 +5,10 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Colecțiile țin loc și de tag-uri: o piesă poate fi în oricâte; tabelele `collections` (nume unic) și `collection_tracks`; „Adăugate recent” = sortarea `recent` după `tracks.added_at` (coloană nouă; piesele existente primesc momentul migrării) | Fără două sisteme care fac același lucru |
+| 2026-11-20 | API: `GET/POST /collections`, `PATCH`/`DELETE /collections/{id}`, `PUT`/`DELETE /collections/{id}/tracks/{track_id}`; `GET /tracks?collection=`; `TrackOut.collection_ids` | Bara laterală și panoul piesei |
+| 2026-11-20 | Colecția aleasă și sortarea sunt navigare: „Șterge filtrele” nu le resetează | Ce ai ales în „Colecții” rămâne |
+| 2026-11-20 | Sortarea alfabetică (titluri, colecții) ignoră diacriticele și majusculele (`mixmatch/text.sort_key`) | `lower()` din SQLite și ordinea Unicode puneau „Încălzire” după „Vârf” |
 | 2026-11-20 | Dependență: `python-multipart` (backend) | FastAPI are nevoie de ea pentru fișiere trimise prin formular (drag & drop) |
 | 2026-11-20 | Drag & drop: fișierele (și folderele, parcurse recursiv în browser) se copiază în folderul administrat `~/Music/mixmatch/Importate` (`MIXMATCH_UPLOAD_DIR`), care devine un folder al bibliotecii și se scanează; doar formatele audio se trimit; numele fără căi (nimic în afara folderului); același nume și aceeași mărime = nu se copiază din nou, alt conținut = „nume (2)” | Browserul nu dă căile fișierelor; muzica rămâne în folderul de muzică al utilizatorului, lângă exporturi |
 | 2026-11-20 | Upload-ul pleacă într-o singură cerere | Fiecare upload pornește o scanare; o a doua cerere ar primi 409 cât rulează prima |
