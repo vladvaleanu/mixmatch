@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,7 @@ from mixmatch.analysis.runner import (
 )
 from mixmatch.analysis.track import analyze_file
 from mixmatch.config import settings
-from mixmatch.db.models import Job, JobKind, JobStatus, LibraryFolder, Track, Waveform
+from mixmatch.db.models import Job, JobStatus, LibraryFolder, Track, Waveform
 from mixmatch.jobs import JobQueue
 from mixmatch.library.scan import scan_folder
 from tests.audio import make_audio, make_music
@@ -150,19 +151,40 @@ def test_changed_file_is_analyzed_again(tmp_path: Path, sessions: sessionmaker[S
 
 
 def test_start_analysis_only_when_needed(
-    songs: dict[str, Path], sessions: sessionmaker[Session]
+    songs: dict[str, Path], tmp_path: Path, sessions: sessionmaker[Session]
 ) -> None:
     queue = JobQueue(sessions, max_workers=1)
     try:
         assert start_analysis_if_needed(queue, sessions) is None  # nimic de analizat
 
-        with sessions.begin() as session:
-            session.add(Job(kind=JobKind.analysis, status=JobStatus.running))
-        add_tracks(sessions, songs["8B"])
-        assert start_analysis_if_needed(queue, sessions) is None  # rulează deja una
+        # Patru piese: primul job lucrează câteva secunde.
+        copies = []
+        for i, song in enumerate(songs.values()):
+            copies.append(tmp_path / f"{i}.wav")
+            copies[-1].write_bytes(song.read_bytes())
+        add_tracks(sessions, *copies)
+        first = start_analysis_if_needed(queue, sessions)
+        assert first is not None
 
-        with sessions.begin() as session:
-            session.scalars(select(Job)).one().status = JobStatus.done
-        assert start_analysis_if_needed(queue, sessions) is not None
+        # Cât rulează, nu pornește al doilea; piesa adăugată acum o ia tot primul job.
+        add_tracks(sessions, songs["8A"])
+        assert start_analysis_if_needed(queue, sessions) is None
+        wait_until_done(sessions, first)
+
+        with sessions() as session:
+            assert pending_track_ids(session) == []
+        assert start_analysis_if_needed(queue, sessions) is None
     finally:
         queue.shutdown()
+
+
+def wait_until_done(sessions: sessionmaker[Session], job_id: int) -> None:
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        with sessions() as session:
+            job = session.get(Job, job_id)
+            if job is not None and job.status in (JobStatus.done, JobStatus.failed):
+                assert job.status is JobStatus.done, job.error
+                return
+        time.sleep(0.05)
+    raise AssertionError("Jobul de analiză nu s-a terminat")

@@ -71,6 +71,6 @@ Piesele de referință: `test-tracks/reference.csv`, 20 de piese din 15 foldere 
   locală a grilei.
 - Erori dublu/jumătate (6/80): compatibilitatea (pasul 5) trebuie să trateze 87 ↔ 174, cum zice planul.
 - Fereastra mică de concurență: dacă o scanare se termină exact când analiza își încheie ultima tură,
-  piesele noi rămân neanalizate până la următoarea scanare sau pornire.
+  piesele noi rămân neanalizate până la următoarea scanare sau pornire. (Reparat în 3b.)
 - Pasul 3b: energie, formă de undă, intro/outro. Crește `analysis_version` la 2, ca toate piesele
   să primească și valorile noi.

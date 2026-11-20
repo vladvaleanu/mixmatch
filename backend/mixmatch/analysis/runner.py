@@ -11,17 +11,20 @@ from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from mixmatch.analysis.track import AnalysisResult, analyze_file
 from mixmatch.config import settings
-from mixmatch.db.models import Job, JobKind, JobStatus, Track, Waveform, utcnow
+from mixmatch.db.models import JobKind, Track, Waveform, utcnow
 from mixmatch.jobs import JobQueue
 
 log = logging.getLogger(__name__)
 
 _start_lock = threading.Lock()
+# Dacă un job de analiză rulează în acest proces. Starea din `jobs` nu ajunge: un job care tocmai
+# a decis să se oprească e încă „running” în bază câteva milisecunde.
+_job_running = False
 
 
 def _needs_analysis():  # type: ignore[no-untyped-def]
@@ -67,30 +70,41 @@ def analyze_pending(
     report: Callable[[float], None],
     workers: int = settings.analysis_workers,
 ) -> int:
+    global _job_running
     done = 0
-    with sessions() as session, ProcessPoolExecutor(max_workers=workers) as pool:
-        while ids := pending_track_ids(session):
-            rows = session.execute(select(Track.id, Track.path).where(Track.id.in_(ids))).all()
-            futures = {pool.submit(analyze_file, Path(path)): (tid, path) for tid, path in rows}
-            for future in as_completed(futures):
-                _save(session, *futures[future], future.result())
-                done += 1
-                remaining = len(futures) - sum(f.done() for f in futures)
-                report(done / (done + remaining))
+    try:
+        with sessions() as session, ProcessPoolExecutor(max_workers=workers) as pool:
+            while True:
+                # Decizia de oprire se ia sub același lock ca pornirea unui job nou: o scanare
+                # care se termină acum fie e văzută aici, fie pornește ea un job nou.
+                with _start_lock:
+                    ids = pending_track_ids(session)
+                    if not ids:
+                        _job_running = False
+                        break
+                rows = session.execute(select(Track.id, Track.path).where(Track.id.in_(ids))).all()
+                futures = {pool.submit(analyze_file, Path(p)): (tid, p) for tid, p in rows}
+                for future in as_completed(futures):
+                    _save(session, *futures[future], future.result())
+                    done += 1
+                    remaining = len(futures) - sum(f.done() for f in futures)
+                    report(done / (done + remaining))
+    finally:
+        with _start_lock:
+            _job_running = False
     log.info("Analiză terminată: %s piese", done)
     return done
 
 
 def start_analysis_if_needed(queue: JobQueue, sessions: sessionmaker[Session]) -> int | None:
-    """Pornește un job de analiză dacă există piese de analizat și nu rulează deja unul."""
+    """Pornește un job de analiză dacă există piese de analizat și nu rulează deja unul.
+
+    Dacă rulează unul, el ia și piesele noi înainte să se oprească (vezi `analyze_pending`).
+    """
+    global _job_running
     with _start_lock, sessions() as session:
-        active = session.scalar(
-            select(func.count(Job.id)).where(
-                Job.kind == JobKind.analysis,
-                Job.status.in_([JobStatus.queued, JobStatus.running]),
-            )
-        )
-        if active or not pending_track_ids(session):
+        if _job_running or not pending_track_ids(session):
             return None
+        _job_running = True
         job_id, _ = queue.submit(JobKind.analysis, lambda report: analyze_pending(sessions, report))
         return job_id

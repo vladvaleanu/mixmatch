@@ -43,6 +43,12 @@ Constantele sunt în `analysis/energy.py`. Pe cele 246 de piese din bibliotecă 
   Outro: 0–8 bare la cele mai multe.
 - `PATCH /tracks/{id}`: 1 → efectivă 1; null → înapoi la automat (4); 7 → 422 `invalid_request`.
 
+## Reparat după commit
+- Un test a picat o dată (nereprodus în 16 rulări), iar commitul `a4d821e` a fost făcut și urcat pe
+  GitHub cu el: verificarea mea citea doar textul rezultatului, nu codul de ieșire. Cauza probabilă e
+  cursa notată în 3a: o scanare care se termina exact când analiza se oprea lăsa piese neanalizate.
+  Acum oprirea jobului și pornirea unuia nou se decid sub același lock. Testul nou acoperă cazul.
+
 ## Decizii
 - Vezi primele intrări din `docs/decisions.md` (scorul de energie, EBU R128, euristica intro/outro,
   cele trei rezoluții, mutarea `GET /tracks/{id}/waveform` în pasul 4, `energy_effective`).

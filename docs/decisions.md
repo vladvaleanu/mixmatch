@@ -5,6 +5,7 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Pornirea unui job de analiză și decizia jobului de a se opri se iau sub același lock, pe baza unui indicator în proces (`_job_running`), nu a stării din `jobs` | Închide cursa în care piesele scanate chiar când analiza se termina rămâneau neanalizate (a făcut un test să pice o dată) |
 | 2026-11-20 | Energia: scor = medie ponderată a abaterilor standard pentru tărie (0,30), lovituri/s (0,25), centroid spectral (0,20) și BPM limitat la 90–150 (0,25); pragurile la cvintilele a 200 de piese din `~/Music` (constante în `analysis/energy.py`) | Pe folderele utilizatorului ordinea iese corectă: minimal house ~1,5, tech house ~3, hardgroove 4,4–4,8 |
 | 2026-11-20 | Tăria: `LoudnessEBUR128` pe semnalul stereo la rata originală; analiza citește audio o singură dată (`AudioLoader`), apoi îl face mono la 44,1 kHz | Tăria corectă pentru auto-gain; o singură citire a fișierului |
 | 2026-11-20 | Intro/outro: bara e „plină” dacă tăria ei e cel mult 4 dB sub percentila 75 a barelor piesei; intro = până la prima bară plină, outro = după ultima; rotunjit la multiplu de 4 bare | Pe exemple, varianta pe toată banda dă aceleași rezultate ca cea doar pe bas, la un cost mai mic. E o euristică; pasul 8a o verifică pe tranziții |
