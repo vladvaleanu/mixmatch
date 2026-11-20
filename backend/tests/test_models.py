@@ -1,8 +1,9 @@
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
-from mixmatch.db.models import Job, JobKind, JobStatus, LibraryFolder, Track
+from mixmatch.db.models import Job, JobKind, JobStatus, LibraryFolder, Track, Waveform
 
 
 def make_track(**overrides: object) -> Track:
@@ -59,3 +60,32 @@ def test_job_defaults(sessions: sessionmaker[Session]) -> None:
         assert job.status is JobStatus.queued
         assert job.progress == 0.0
         assert job.created_at is not None
+
+
+def test_effective_energy_prefers_manual(sessions: sessionmaker[Session]) -> None:
+    with sessions.begin() as session:
+        session.add_all(
+            [
+                make_track(path="/a", energy=2),
+                make_track(path="/b", energy=2, energy_manual=5),
+                make_track(path="/c"),
+            ]
+        )
+    with sessions() as session:
+        tracks = {t.path: t for t in session.scalars(select(Track))}
+        assert [tracks[p].energy_effective for p in ("/a", "/b", "/c")] == [2, 5, None]
+        # Aceeași regulă și în SQL, pentru filtre.
+        high = session.scalars(select(Track.path).where(Track.energy_effective >= 5)).all()
+        assert high == ["/b"]
+
+
+def test_deleting_track_deletes_waveform(sessions: sessionmaker[Session]) -> None:
+    with sessions.begin() as session:
+        track = make_track()
+        session.add(track)
+        session.flush()
+        session.add(Waveform(track_id=track.id, preview=b"1", peaks=b"2", peaks_hi=b"3"))
+    with sessions.begin() as session:
+        session.delete(session.scalars(select(Track)).one())
+    with sessions() as session:
+        assert session.scalars(select(Waveform)).all() == []

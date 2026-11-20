@@ -97,6 +97,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tracks/{track_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Track
+         * @description Corecturi manuale. Deocamdată: energia (`energy_manual`).
+         */
+        patch: operations["update_track"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -173,8 +193,23 @@ export interface components {
             key_camelot: string | null;
             /** Key Name */
             key_name: string | null;
+            /** Energy */
+            energy: number | null;
+            /** Energy Manual */
+            energy_manual: number | null;
+            /** Intro Bars */
+            intro_bars: number | null;
+            /** Outro Bars */
+            outro_bars: number | null;
+            /** Waveform Preview */
+            waveform_preview: number[] | null;
             /** Analyzed */
             analyzed: boolean;
+        };
+        /** TrackPatch */
+        TrackPatch: {
+            /** Energy Manual */
+            energy_manual: number | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -345,6 +380,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrackOut"][];
+                };
+            };
+        };
+    };
+    update_track: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                track_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

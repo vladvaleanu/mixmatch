@@ -1,5 +1,6 @@
-"""Citirea audio pentru analiză: mono, 44,1 kHz, float32."""
+"""Citirea audio pentru analiză: stereo la rata originală (pentru tărie) și mono la 44,1 kHz."""
 
+from dataclasses import dataclass
 from pathlib import Path
 
 import essentia
@@ -12,5 +13,16 @@ essentia.log.warningActive = False  # Essentia e foarte vorbăreț la fișiere c
 essentia.log.infoActive = False
 
 
-def load_mono(path: Path) -> np.ndarray:
-    return es.MonoLoader(filename=str(path), sampleRate=SAMPLE_RATE)()
+@dataclass(frozen=True)
+class Audio:
+    mono: np.ndarray  # float32, la SAMPLE_RATE
+    stereo: np.ndarray  # (n, 2), la rata originală
+    sample_rate: float  # rata originală
+
+
+def load(path: Path) -> Audio:
+    stereo, rate, channels, *_ = es.AudioLoader(filename=str(path))()
+    mono = es.MonoMixer()(stereo, channels)
+    if rate != SAMPLE_RATE:
+        mono = es.Resample(inputSampleRate=rate, outputSampleRate=SAMPLE_RATE)(mono)
+    return Audio(mono=mono, stereo=stereo, sample_rate=float(rate))

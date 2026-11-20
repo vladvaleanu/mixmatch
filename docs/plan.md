@@ -215,14 +215,14 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 - **Citește înainte**: `analysis/`, nota pasului 3a.
 - **Livrează**: `analysis/energy.py` (energia din praguri fixe, calibrate pe biblioteca utilizatorului;
   tăria în LUFS), `analysis/waveform.py`, tabelul `waveforms`, `analysis_version` = 2,
-  `GET /tracks/{id}/waveform`, `PATCH /tracks/{id}` (energy_manual); `EnergyDots` și `Waveform`
+  `PATCH /tracks/{id}` (energy_manual); `EnergyDots` și `Waveform`
   în `ui/`; corectarea manuală a energiei în UI.
 - **Gata când**: tabelul arată ca macheta Biblioteca, iar energia corectată de mână are prioritate.
 
 ### Pasul 4 — Redarea
 - **Scop**: butonul de play din tabel și panoul „Selectată”.
 - **Citește înainte**: `api/tracks.py`, `ui/Waveform`, `features/library/`.
-- **Livrează**: `GET /tracks/{id}/audio` cu Range; `audio/engine.ts` (un singur player în toată
+- **Livrează**: `GET /tracks/{id}/audio` cu Range; `GET /tracks/{id}/waveform?res=lo|hi`; `audio/engine.ts` (un singur player în toată
   aplicația); panoul din dreapta (date despre piesă, forma de undă mare).
 - **Gata când**: poți asculta și derula orice piesă, iar două piese nu cântă niciodată simultan.
 

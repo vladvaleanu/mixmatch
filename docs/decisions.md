@@ -5,6 +5,13 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Energia: scor = medie ponderată a abaterilor standard pentru tărie (0,30), lovituri/s (0,25), centroid spectral (0,20) și BPM limitat la 90–150 (0,25); pragurile la cvintilele a 200 de piese din `~/Music` (constante în `analysis/energy.py`) | Pe folderele utilizatorului ordinea iese corectă: minimal house ~1,5, tech house ~3, hardgroove 4,4–4,8 |
+| 2026-11-20 | Tăria: `LoudnessEBUR128` pe semnalul stereo la rata originală; analiza citește audio o singură dată (`AudioLoader`), apoi îl face mono la 44,1 kHz | Tăria corectă pentru auto-gain; o singură citire a fișierului |
+| 2026-11-20 | Intro/outro: bara e „plină” dacă tăria ei e cel mult 4 dB sub percentila 75 a barelor piesei; intro = până la prima bară plină, outro = după ultima; rotunjit la multiplu de 4 bare | Pe exemple, varianta pe toată banda dă aceleași rezultate ca cea doar pe bas, la un cost mai mic. E o euristică; pasul 8a o verifică pe tranziții |
+| 2026-11-20 | Forma de undă: vârfuri normalizate la vârful piesei, ca octeți 0–255, în trei rezoluții: 40 (tabel, inclus în `GET /tracks` ca `waveform_preview`), 1000 și 8000 (tabelul `waveforms`) | Tabelul nu face câte o cerere pe rând; rezoluțiile mari se citesc doar la nevoie |
+| 2026-11-20 | `GET /tracks/{id}/waveform` se mută în pasul 4, la primul ecran care îl folosește (panoul „Selectată”) | Fără endpoint fără client (principiul 4) |
+| 2026-11-20 | Energia efectivă e `Track.energy_effective` (hybrid property: în Python și în SQL, `coalesce(energy_manual, energy)`); API-ul trimite `energy` (efectivă) și `energy_manual` | Un singur loc pentru regulă, folosit și de filtrele din pasul 5 |
+| 2026-11-20 | `analysis_version` = 2: piesele analizate în 3a primesc automat energia, tăria, forma de undă și intro/outro la următoarea pornire | Fără reanalize manuale |
 | 2026-11-20 | Energia 1–5 din praguri fixe, calibrate o dată pe biblioteca utilizatorului și scrise în cod; nu se recalculează când biblioteca crește | Ales de utilizator; energia unei piese rămâne stabilă |
 | 2026-11-20 | Auto-gain: analiza (3b) măsoară tăria integrată (LUFS, coloana `loudness_lufs`); planul tranziției dă fiecărui deck un câștig spre ținta de −12 LUFS, limitat la [−12, +6] dB; exportul trece printr-un limiter | Ales de utilizator; piesele de epoci diferite sună la fel de tare, în previzualizare și în export |
 | 2026-11-20 | Pragurile de tempo: Lin ≤ 3 %, Bun ≤ 6 %, peste = Atenție (și pentru jumătate/dublu). Compatibilitatea tonului folosește tonul lui B după accelerarea stil vinil: o abatere ≥ ½ semiton mută tonul pe roată (1 semiton = 7 pași Camelot) | Ales de utilizator; cu sincronizarea stil vinil, tempo-ul schimbă tonul |

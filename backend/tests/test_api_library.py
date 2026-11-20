@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
-from mixmatch.db.models import Job, LibraryFolder, Track
+from mixmatch.db.models import Job, LibraryFolder, Track, Waveform
 from mixmatch.db.session import SessionLocal
 from mixmatch.main import app
 from tests.audio import make_audio, make_music
@@ -16,7 +16,7 @@ from tests.audio import make_audio, make_music
 def client() -> Iterator[TestClient]:
     with TestClient(app) as test_client:  # pornește lifespan-ul: migrări pe baza de test
         with SessionLocal.begin() as session:
-            for model in (Track, LibraryFolder, Job):
+            for model in (Waveform, Track, LibraryFolder, Job):
                 session.execute(delete(model))
         yield test_client
 
@@ -67,6 +67,38 @@ def test_scan_starts_analysis(client: TestClient, tmp_path: Path) -> None:
     assert track["bpm"] == pytest.approx(124, abs=1)
     assert (track["key_camelot"], track["key_name"]) == ("8A", "La minor")
     assert client.get("/api/jobs/active").json() == []
+    assert track["energy"] in range(1, 6)
+    assert len(track["waveform_preview"]) == 40
+
+
+def test_manual_energy_overrides_and_resets(client: TestClient) -> None:
+    with SessionLocal.begin() as session:
+        track = Track(path="/x.mp3", file_hash="h", title="X", duration_s=300, energy=2)
+        session.add(track)
+        session.flush()
+        track_id = track.id
+
+    corrected = client.patch(f"/api/tracks/{track_id}", json={"energy_manual": 5}).json()
+    assert (corrected["energy"], corrected["energy_manual"]) == (5, 5)
+    assert client.get("/api/tracks").json()[0]["energy"] == 5
+
+    reset = client.patch(f"/api/tracks/{track_id}", json={"energy_manual": None}).json()
+    assert (reset["energy"], reset["energy_manual"]) == (2, None)
+
+
+@pytest.mark.parametrize("value", [0, 6, "mare"])
+def test_manual_energy_must_be_1_to_5(client: TestClient, value: object) -> None:
+    with SessionLocal.begin() as session:
+        session.add(Track(path="/y.mp3", file_hash="h", title="Y", duration_s=300))
+    track_id = client.get("/api/tracks").json()[0]["id"]
+    response = client.patch(f"/api/tracks/{track_id}", json={"energy_manual": value})
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_request"
+
+
+def test_patch_unknown_track_is_404(client: TestClient) -> None:
+    response = client.patch("/api/tracks/999999", json={"energy_manual": 3})
+    assert response.json()["error"]["code"] == "track_not_found"
 
 
 def test_adding_same_folder_twice_rescans_without_duplicates(

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from mixmatch.analysis.track import AnalysisResult, analyze_file
 from mixmatch.config import settings
-from mixmatch.db.models import Job, JobKind, JobStatus, Track, utcnow
+from mixmatch.db.models import Job, JobKind, JobStatus, Track, Waveform, utcnow
 from mixmatch.jobs import JobQueue
 
 log = logging.getLogger(__name__)
@@ -41,6 +41,21 @@ def _save(session: Session, track_id: int, path: str, result: AnalysisResult) ->
     track.bpm = result.bpm
     track.first_beat_s = result.first_beat_s
     track.key_camelot = result.key_camelot
+    track.energy = result.energy
+    track.loudness_lufs = result.loudness_lufs
+    track.intro_bars = result.intro_bars
+    track.outro_bars = result.outro_bars
+    waveform = session.get(Waveform, track_id)
+    if result.peaks is None:
+        if waveform is not None:
+            session.delete(waveform)
+    else:
+        if waveform is None:
+            waveform = Waveform(track_id=track_id)
+            session.add(waveform)
+        waveform.preview = result.peaks.preview
+        waveform.peaks = result.peaks.lo
+        waveform.peaks_hi = result.peaks.hi
     # Și o analiză eșuată primește versiunea curentă, ca să nu se reia la nesfârșit.
     track.analysis_version = settings.analysis_version
     track.analyzed_at = utcnow()

@@ -24,6 +24,11 @@ export const ro = {
   key: {
     label: (code: string, name: string | null) => (name ? `Ton ${code}, ${name}` : `Ton ${code}`),
   },
+  energy: {
+    label: (value: number, manual: boolean) =>
+      `Energie ${value} din 5${manual ? ' (corectată de tine; click pe ea ca să revii la automat)' : ''}`,
+    set: (value: number) => `Setează energia ${value}`,
+  },
   analysis: {
     running: 'Analizez piesele: tempo și ton…',
     progressLabel: 'Progresul analizei',
@@ -41,7 +46,9 @@ export const ro = {
       track: 'Piesă',
       bpm: 'BPM',
       key: 'Ton',
+      energy: 'Energie',
       duration: 'Durată',
+      waveform: 'Formă de undă',
     },
     unknownArtist: 'Artist necunoscut',
   },

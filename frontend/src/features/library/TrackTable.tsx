@@ -1,10 +1,13 @@
 import type { CSSProperties } from 'react';
 
 import type { Schemas } from '../../api/client';
+import { useSetEnergy } from '../../api/tracks';
 import { ro } from '../../i18n/ro';
 import { color, coverColor, fontSize, radius, space } from '../../theme/tokens';
 import { formatBpm, formatDuration } from '../../ui/format';
+import { EnergyDots } from '../../ui/EnergyDots';
 import { KeyPill } from '../../ui/KeyPill';
+import { Waveform } from '../../ui/Waveform';
 
 type Track = Schemas['TrackOut'];
 type Props = { tracks: Track[] };
@@ -34,6 +37,7 @@ function Pending() {
 }
 
 export function TrackTable({ tracks }: Props) {
+  const setEnergy = useSetEnergy();
   return (
     <div
       style={{
@@ -43,7 +47,7 @@ export function TrackTable({ tracks }: Props) {
         border: `1px solid ${color.border}`,
       }}
     >
-      <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse' }}>
+      <table style={{ width: '100%', minWidth: 820, borderCollapse: 'collapse' }}>
         <thead>
           <tr>
             <th scope="col" style={{ ...th, paddingLeft: space[16] }}>
@@ -55,8 +59,14 @@ export function TrackTable({ tracks }: Props) {
             <th scope="col" style={{ ...th, width: 1 }}>
               {ro.library.columns.key}
             </th>
-            <th scope="col" style={{ ...th, paddingRight: space[16], width: 1 }}>
+            <th scope="col" style={{ ...th, width: 1 }}>
+              {ro.library.columns.energy}
+            </th>
+            <th scope="col" style={{ ...th, width: 1 }}>
               {ro.library.columns.duration}
+            </th>
+            <th scope="col" style={{ ...th, paddingRight: space[16], width: 1 }}>
+              {ro.library.columns.waveform}
             </th>
           </tr>
         </thead>
@@ -93,8 +103,22 @@ export function TrackTable({ tracks }: Props) {
                   !track.analyzed && <Pending />
                 )}
               </td>
-              <td style={{ ...lastCell, ...numeric, color: color.textSoft }}>
+              <td style={cell}>
+                {track.energy !== null ? (
+                  <EnergyDots
+                    value={track.energy}
+                    manual={track.energy_manual !== null}
+                    onChange={(energy) => setEnergy.mutate({ id: track.id, energy })}
+                  />
+                ) : (
+                  !track.analyzed && <Pending />
+                )}
+              </td>
+              <td style={{ ...cell, ...numeric, color: color.textSoft }}>
                 {formatDuration(track.duration_s)}
+              </td>
+              <td style={lastCell}>
+                {track.waveform_preview && <Waveform peaks={track.waveform_preview} height={28} />}
               </td>
             </tr>
           ))}

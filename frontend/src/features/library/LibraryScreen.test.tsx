@@ -16,9 +16,22 @@ const track = {
   bpm: 124,
   key_camelot: '8A',
   key_name: 'La minor',
+  energy: 3,
+  energy_manual: null as number | null,
+  intro_bars: 16,
+  outro_bars: 32,
+  waveform_preview: Array.from({ length: 40 }, (_, i) => i * 6),
   analyzed: true,
 };
-const pending = { ...track, bpm: null, key_camelot: null, key_name: null, analyzed: false };
+const pending = {
+  ...track,
+  bpm: null,
+  key_camelot: null,
+  key_name: null,
+  energy: null,
+  waveform_preview: null,
+  analyzed: false,
+};
 const noJobs = { 'GET /api/jobs/active': () => [] };
 
 afterEach(() => {
@@ -42,6 +55,29 @@ describe('LibraryScreen', () => {
     expect(screen.getAllByLabelText('Ton 8A, La minor')).toHaveLength(2);
   });
 
+  it('corectează energia din tabel și revine la automat', async () => {
+    let current = { ...track };
+    const patches: unknown[] = [];
+    mockApi({
+      ...noJobs,
+      'GET /api/tracks': () => [current],
+      'PATCH /api/tracks/1': async (request) => {
+        const body = (await request.json()) as { energy_manual: number | null };
+        patches.push(body);
+        current = { ...track, energy: body.energy_manual ?? 3, energy_manual: body.energy_manual };
+        return current;
+      },
+    });
+    renderWithProviders(<LibraryScreen />);
+
+    fireEvent.click(await screen.findByRole('radio', { name: ro.energy.set(5) }));
+    await screen.findByRole('radiogroup', { name: ro.energy.label(5, true) });
+
+    fireEvent.click(screen.getByRole('radio', { name: ro.energy.set(5) }));
+    await screen.findByRole('radiogroup', { name: ro.energy.label(3, false) });
+    expect(patches).toEqual([{ energy_manual: 5 }, { energy_manual: null }]);
+  });
+
   it('marchează piesele neanalizate și arată progresul analizei', async () => {
     mockApi({
       'GET /api/tracks': () => [pending],
@@ -52,7 +88,7 @@ describe('LibraryScreen', () => {
     renderWithProviders(<LibraryScreen />);
 
     expect(await screen.findByText(`${ro.analysis.running} 25%`)).toBeTruthy();
-    expect(screen.getAllByLabelText(ro.analysis.pending)).toHaveLength(2); // BPM și ton
+    expect(screen.getAllByLabelText(ro.analysis.pending)).toHaveLength(3); // BPM, ton, energie
     expect(screen.queryByText('8A')).toBeNull();
   });
 

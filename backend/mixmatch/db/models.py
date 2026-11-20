@@ -3,8 +3,19 @@
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from sqlalchemy import CheckConstraint, DateTime, Enum, MetaData, String, Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    Enum,
+    ForeignKey,
+    LargeBinary,
+    MetaData,
+    String,
+    Text,
+    func,
+)
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 def utcnow() -> datetime:
@@ -42,11 +53,41 @@ class Track(Base):
     key_camelot: Mapped[str | None] = mapped_column(String(3))
     energy: Mapped[int | None]
     energy_manual: Mapped[int | None]
+    loudness_lufs: Mapped[float | None]
     first_beat_s: Mapped[float | None]
     intro_bars: Mapped[int | None]
     outro_bars: Mapped[int | None]
     analysis_version: Mapped[int | None]
     analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    waveform: Mapped["Waveform | None"] = relationship(
+        back_populates="track", cascade="all, delete-orphan", passive_deletes=True, lazy="raise"
+    )
+
+    @hybrid_property
+    def energy_effective(self) -> int | None:
+        """Singurul loc unde se alege energia afișată: corectura manuală are prioritate."""
+        return self.energy_manual if self.energy_manual is not None else self.energy
+
+    @energy_effective.inplace.expression
+    @classmethod
+    def _energy_effective_sql(cls):  # type: ignore[no-untyped-def]
+        return func.coalesce(cls.energy_manual, cls.energy)
+
+
+class Waveform(Base):
+    """Vârfurile formei de undă (octeți 0–255): previzualizare (40), listă (1000), editor (8000)."""
+
+    __tablename__ = "waveforms"
+
+    track_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True
+    )
+    preview: Mapped[bytes] = mapped_column(LargeBinary)
+    peaks: Mapped[bytes] = mapped_column(LargeBinary)
+    peaks_hi: Mapped[bytes] = mapped_column(LargeBinary)
+
+    track: Mapped[Track] = relationship(back_populates="waveform")
 
 
 class LibraryFolder(Base):
