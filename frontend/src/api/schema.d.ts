@@ -43,6 +43,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/library/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Tracks
+         * @description Copiază fișierele trase în Bibliotecă în folderul administrat, apoi îl scanează.
+         *
+         *     Un fișier identic (același nume și aceeași mărime) deja copiat nu se copiază din nou.
+         */
+        post: operations["upload_tracks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/active": {
         parameters: {
             query?: never;
@@ -448,6 +470,11 @@ export interface components {
             /** Points */
             points: components["schemas"]["PointOut"][];
         };
+        /** Body_upload_tracks */
+        Body_upload_tracks: {
+            /** Files */
+            files: string[];
+        };
         /** EchoTapOut */
         EchoTapOut: {
             /** Delay S */
@@ -793,6 +820,17 @@ export interface components {
              */
             auto?: boolean;
         };
+        /** UploadOut */
+        UploadOut: {
+            /** Saved */
+            saved: string[];
+            /** Skipped */
+            skipped: string[];
+            /** Folder Id */
+            folder_id: number;
+            /** Job Id */
+            job_id: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -877,6 +915,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_tracks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_tracks"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadOut"];
                 };
             };
             /** @description Conflict */

@@ -17,6 +17,12 @@ def _default_data_dir() -> Path:
     return Path(os.environ.get("MIXMATCH_DATA_DIR", REPO_DIR / "data"))
 
 
+def _default_uploads_dir() -> Path:
+    return Path(
+        os.environ.get("MIXMATCH_UPLOAD_DIR", Path.home() / "Music" / "mixmatch" / "Importate")
+    )
+
+
 def _default_exports_dir() -> Path:
     return Path(os.environ.get("MIXMATCH_EXPORT_DIR", Path.home() / "Music" / "mixmatch"))
 
@@ -27,6 +33,8 @@ class Settings:
     data_dir: Path = field(default_factory=_default_data_dir)
     # Unde se scriu exporturile: câte un folder pe mix (audio, tracklist, .cue).
     exports_dir: Path = field(default_factory=_default_exports_dir)
+    # Folderul administrat în care se copiază fișierele trase în Bibliotecă (drag & drop).
+    uploads_dir: Path = field(default_factory=_default_uploads_dir)
     # Formatele pe care le scanează biblioteca.
     audio_extensions: frozenset[str] = frozenset({".mp3", ".flac", ".wav", ".aif", ".aiff", ".m4a"})
     # Fișierele mai scurte (sample-uri, jingle-uri) nu intră în bibliotecă.

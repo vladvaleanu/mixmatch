@@ -8,6 +8,7 @@ import pytest
 # Înainte de orice import din mixmatch: aplicația nu are voie să atingă data/ din repo.
 os.environ.setdefault("MIXMATCH_DATA_DIR", tempfile.mkdtemp(prefix="mixmatch-test-"))
 os.environ.setdefault("MIXMATCH_EXPORT_DIR", tempfile.mkdtemp(prefix="mixmatch-exports-"))
+os.environ.setdefault("MIXMATCH_UPLOAD_DIR", tempfile.mkdtemp(prefix="mixmatch-uploads-"))
 
 import time  # noqa: E402
 

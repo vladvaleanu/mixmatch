@@ -5,6 +5,9 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Dependență: `python-multipart` (backend) | FastAPI are nevoie de ea pentru fișiere trimise prin formular (drag & drop) |
+| 2026-11-20 | Drag & drop: fișierele (și folderele, parcurse recursiv în browser) se copiază în folderul administrat `~/Music/mixmatch/Importate` (`MIXMATCH_UPLOAD_DIR`), care devine un folder al bibliotecii și se scanează; doar formatele audio se trimit; numele fără căi (nimic în afara folderului); același nume și aceeași mărime = nu se copiază din nou, alt conținut = „nume (2)” | Browserul nu dă căile fișierelor; muzica rămâne în folderul de muzică al utilizatorului, lângă exporturi |
+| 2026-11-20 | Upload-ul pleacă într-o singură cerere | Fiecare upload pornește o scanare; o a doua cerere ar primi 409 cât rulează prima |
 | 2026-11-20 | În tracklist și .cue, o piesă începe la mijlocul tranziției spre ea (unde preia basul); prima la 0:00 | Convenția obișnuită la tracklisturile de mix |
 | 2026-11-20 | Lângă fișierul audio se scriu `<nume>.txt` (tracklist: „01. [0:00] Artist — Titlu”) și `<nume>.cue` (FILE … MP3/WAVE, INDEX 01 MM:SS:FF, 75 de cadre/s) | Formatele așteptate de playere și de site-urile de mixuri |
 | 2026-11-20 | Tabelul `exports` (mix_id și job_id cu SET NULL, numele mixului copiat): istoricul rămâne și după ștergerea mixului; `GET /exports` (cu jobul și fișierele existente pe disc), `GET /exports/{id}/file?kind=audio\|tracklist\|cue` (descărcare) | Ecranul Exporturi; un fișier șters de pe disc apare ca lipsă, nu ca eroare |

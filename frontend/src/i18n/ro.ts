@@ -94,7 +94,9 @@ export const ro = {
     title: 'Biblioteca ta',
     subtitle: 'Tempo, tonalitate și energie detectate automat la import.',
     importButton: 'Importă piese',
-    addFolderZone: 'Adaugă un folder cu muzică: MP3, FLAC, WAV, AIFF, M4A',
+    addFolderZone:
+      'Trage aici un folder sau fișiere MP3, FLAC, WAV, AIFF, M4A — sau apasă ca să alegi un folder de pe disc',
+    dropNow: 'Lasă fișierele aici',
     trackCount: (n: number) => (n === 1 ? '1 piesă' : `${n} piese`),
     loading: 'Se încarcă biblioteca…',
     empty: 'Încă nu ai piese. Adaugă un folder și le găsim noi.',
@@ -108,6 +110,13 @@ export const ro = {
       waveform: 'Formă de undă',
     },
     unknownArtist: 'Artist necunoscut',
+  },
+  upload: {
+    title: 'Import',
+    copying: (n: number) => (n === 1 ? 'Se copiază 1 fișier…' : `Se copiază ${n} fișiere…`),
+    where: 'Fișierele se copiază în ~/Music/mixmatch/Importate.',
+    none: 'N-am găsit fișiere audio printre cele trase (MP3, FLAC, WAV, AIFF, M4A).',
+    skipped: (names: string[]) => `Sărite (nu sunt audio): ${names.join(', ')}`,
   },
   addFolder: {
     title: 'Adaugă un folder',

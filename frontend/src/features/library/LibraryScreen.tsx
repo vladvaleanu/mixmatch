@@ -1,3 +1,6 @@
+import { useState, type DragEvent } from 'react';
+
+import { useUploadTracks } from '../../api/library';
 import type { TrackFilters } from '../../api/tracks';
 import { useTracks } from '../../api/tracks';
 import { ro } from '../../i18n/ro';
@@ -5,12 +8,14 @@ import { color, radius, space } from '../../theme/tokens';
 import { ScreenHeader } from '../../ui/ScreenHeader';
 import { AddFolderDialog } from './AddFolderDialog';
 import { AnalysisBanner } from './AnalysisBanner';
+import { droppedAudioFiles } from './dropFiles';
 import { useAddFolderDialog } from './addFolderStore';
 import { hasActiveFilters, useFilters } from './filterStore';
 import { useSelectedTrack } from './selectionStore';
 import { Sidebar } from './Sidebar';
 import { TrackPanel } from './TrackPanel';
 import { TrackTable } from './TrackTable';
+import { UploadDialog } from './UploadDialog';
 
 function FolderIcon() {
   return (
@@ -42,6 +47,18 @@ export function LibraryScreen() {
   const selected = library.data?.find((track) => track.id === selectedId);
   const count = tracks.data?.length ?? 0;
   const filtered = hasActiveFilters(filters);
+  const upload = useUploadTracks();
+  const [dragging, setDragging] = useState(false);
+  const [dropped, setDropped] = useState<number | null>(null);
+
+  const onDrop = (event: DragEvent) => {
+    event.preventDefault();
+    setDragging(false);
+    void droppedAudioFiles(event.dataTransfer).then((files) => {
+      setDropped(files.length);
+      if (files.length) upload.mutate(files);
+    });
+  };
 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', flex: 1, minWidth: 0, alignItems: 'stretch' }}>
@@ -123,22 +140,28 @@ export function LibraryScreen() {
         <button
           type="button"
           onClick={() => setOpen(true)}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
           style={{
-            border: `1.5px dashed ${color.borderDashed}`,
+            border: `1.5px dashed ${dragging ? color.accent : color.borderDashed}`,
             borderRadius: radius.card,
             padding: `${space[18]}px ${space[20]}px`,
             display: 'flex',
             alignItems: 'center',
             gap: space[14],
-            background: 'transparent',
-            color: color.textMuted,
+            background: dragging ? color.accentTint : 'transparent',
+            color: dragging ? color.accentSoftText : color.textMuted,
             font: 'inherit',
             textAlign: 'left',
             cursor: 'pointer',
           }}
         >
           <FolderIcon />
-          {ro.library.addFolderZone}
+          {dragging ? ro.library.dropNow : ro.library.addFolderZone}
         </button>
 
         <AnalysisBanner />
@@ -170,6 +193,17 @@ export function LibraryScreen() {
         )}
 
         {open && <AddFolderDialog onClose={() => setOpen(false)} />}
+        {dropped !== null && (
+          <UploadDialog
+            count={dropped}
+            result={upload.data}
+            pending={upload.isPending}
+            onClose={() => {
+              setDropped(null);
+              upload.reset();
+            }}
+          />
+        )}
       </div>
 
       <aside

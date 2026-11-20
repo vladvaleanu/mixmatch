@@ -226,6 +226,32 @@ describe('LibraryScreen', () => {
     expect(screen.getByText('Paper Lights')).toBeTruthy();
   });
 
+  it('importă fișierele trase în zonă (doar audio) și arată scanarea', async () => {
+    const api = mockApi({
+      ...noJobs,
+      'GET /api/tracks': () => [],
+      'POST /api/library/upload': () =>
+        Response.json({ saved: ['a.mp3'], skipped: [], folder_id: 1, job_id: 5 }, { status: 202 }),
+      'GET /api/jobs/5': () => ({ id: 5, kind: 'scan', status: 'done', progress: 1, error: null }),
+    });
+    renderWithProviders(<LibraryScreen />);
+    const zone = await screen.findByRole('button', { name: ro.library.addFolderZone });
+
+    const audio = new File(['x'], 'a.mp3', { type: 'audio/mpeg' });
+    const text = new File(['y'], 'note.txt', { type: 'text/plain' });
+    fireEvent.dragOver(zone, { dataTransfer: { items: [], files: [] } });
+    expect(screen.getByRole('button', { name: ro.library.dropNow })).toBeTruthy();
+    fireEvent.drop(zone, { dataTransfer: { items: [], files: [audio, text] } });
+
+    expect(await screen.findByText(ro.addFolder.done(0))).toBeTruthy();
+    const post = api.mock.calls.map(([r]) => r as Request).find((r) => r.method === 'POST');
+    const form = await post?.formData();
+    // Node pierde numele la recitirea FormData („blob”); verificăm că a plecat doar fișierul audio.
+    const sent = form?.getAll('files') ?? [];
+    expect(sent).toHaveLength(1);
+    expect(await (sent[0] as Blob).text()).toBe('x');
+  });
+
   it('arată eroarea API în toast-ul global', async () => {
     mockApi({
       ...noJobs,

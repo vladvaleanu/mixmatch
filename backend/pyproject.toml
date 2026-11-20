@@ -9,6 +9,7 @@ dependencies = [
     "sqlalchemy>=2.0",
     "alembic>=1.14",
     "mutagen>=1.47",
+    "python-multipart>=0.0.20",
 ]
 
 [project.optional-dependencies]
