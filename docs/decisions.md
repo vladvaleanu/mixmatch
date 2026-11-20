@@ -5,6 +5,12 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Dependențe backend pasul 1: sqlalchemy ≥ 2, alembic | Baza de date și migrările, ca în plan |
+| 2026-11-20 | Baza stă în `data/mixmatch.db` (folderul se schimbă cu `MIXMATCH_DATA_DIR`); SQLite cu WAL și `foreign_keys = ON` | Un singur fișier local; WAL lasă citirile din API să meargă în timp ce joburile scriu |
+| 2026-11-20 | Migrările rulează automat la pornirea backendului (lifespan), apoi joburile rămase `queued`/`running` devin `failed` cu motivul „întrerupt” | Aplicație locală: baza e mereu la zi; coada e în proces, deci un job neterminat nu mai poate continua după repornire |
+| 2026-11-20 | Starea joburilor: `queued` → `running` → `done` / `failed`; tipuri: `scan`, `analysis`, `export`; `progress` între 0 și 1 | Stări simple, suficiente pentru bara de progres |
+| 2026-11-20 | Constrângeri cu nume stabile (naming convention) și migrări în mod batch | SQLite nu suportă ALTER complet; batch-ul are nevoie de nume pentru constrângeri |
+| 2026-11-20 | Un test compară modelele cu migrările (`compare_metadata`) | Un model schimbat fără migrare pică testele |
 | 2026-11-20 | Sincronizarea tempo-ului în tranziții: stil vinil (viteza și tonul se schimbă împreună), fără time-stretch. Raportul `bpm_A / bpm_B` intră în planul tranziției; browserul folosește `playbackRate`, ffmpeg `asetrate` + `aresample` | Ales de utilizator; previzualizarea și exportul sună identic, fără biblioteci de time-stretch |
 | 2026-11-20 | Setările unei tranziții sunt legate de perechea (from_track_id, to_track_id) din mix, nu de poziție | Ales de utilizator; o reordonare nu mută setări pe alte piese |
 | 2026-11-20 | Exportul din MVP: doar WAV/MP3, tracklist și .cue; Rekordbox XML și Serato după MVP | Ales de utilizator |
