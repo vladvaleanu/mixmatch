@@ -1,14 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { player, usePlayer } from './engine';
+import { player, transitionPreview, usePlayer, usePreview } from './engine';
+import { FakeContext } from './fakeAudio';
+import type { Plan } from './plan';
 
-class FakeAudioContext {
-  resume = vi.fn(async () => undefined);
-  destination = {};
-  createMediaElementSource() {
-    return { connect: vi.fn() };
-  }
-}
+const FakeAudioContext = FakeContext;
 
 const created: HTMLMediaElement[] = [];
 
@@ -57,5 +53,45 @@ describe('player', () => {
     player.playFrom(3, '/api/tracks/3/audio', 400, 120);
     expect(usePlayer.getState()).toMatchObject({ trackId: 3, playing: true, positionS: 120 });
     expect(created[0]?.currentTime).toBe(120);
+  });
+});
+
+describe('previzualizarea tranziției', () => {
+  const plan = {
+    style: 'crossfade',
+    length_s: 10,
+    a_start_s: 50,
+    b_start_s: 0,
+    speed_b: 1,
+    gain_a_db: 0,
+    gain_b_db: 0,
+    bass_shelf_hz: 150,
+    echo_taps: [],
+    preview_start_s: -2,
+    preview_end_s: 12,
+    automations: [],
+  } as unknown as Plan;
+
+  it('încarcă bucățile din plan, cântă, și oprește playerul', async () => {
+    player.toggle(1, '/api/tracks/1/audio', 300);
+    expect(usePlayer.getState().playing).toBe(true);
+
+    const load = vi.fn(async () => new ArrayBuffer(8));
+    await transitionPreview.play('7/3', plan, load);
+
+    expect(load).toHaveBeenCalledWith('a', { fromS: 48, toS: 62, atS: 0 });
+    expect(load).toHaveBeenCalledWith('b', { fromS: 0, toS: 12, atS: 2 });
+    expect(usePreview.getState()).toMatchObject({ key: '7/3', status: 'playing' });
+    expect(usePlayer.getState().playing).toBe(false);
+
+    player.toggle(1, '/api/tracks/1/audio', 300); // playerul oprește previzualizarea
+    expect(usePreview.getState().status).toBe('idle');
+  });
+
+  it('o eroare la încărcare revine la repaus', async () => {
+    await transitionPreview.play('7/3', plan, async () => {
+      throw new Error('404');
+    });
+    expect(usePreview.getState()).toMatchObject({ key: null, status: 'idle' });
   });
 });

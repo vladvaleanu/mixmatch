@@ -24,12 +24,15 @@ def get_job(sessions: sessionmaker[Session], job_id: int) -> Job:
 
 def test_successful_job_is_done(queue: JobQueue, sessions: sessionmaker[Session]) -> None:
     seen: list[float] = []
+    known = threading.Event()  # jobul poate porni înainte ca `submit` să întoarcă id-ul
 
     def work(report: Report) -> None:
+        known.wait(timeout=5)
         report(0.5)
         seen.append(get_job(sessions, job_id).progress)
 
     job_id, future = queue.submit(JobKind.scan, work)
+    known.set()
     future.result(timeout=5)
 
     job = get_job(sessions, job_id)
@@ -64,14 +67,17 @@ def test_job_is_running_while_it_works(queue: JobQueue, sessions: sessionmaker[S
 
 def test_progress_is_clamped(queue: JobQueue, sessions: sessionmaker[Session]) -> None:
     seen: list[float] = []
+    known = threading.Event()
 
     def work(report: Report) -> None:
+        known.wait(timeout=5)
         report(1.7)
         seen.append(get_job(sessions, job_id).progress)
         report(-1)
         seen.append(get_job(sessions, job_id).progress)
 
     job_id, future = queue.submit(JobKind.scan, work)
+    known.set()
     future.result(timeout=5)
     assert seen == [1.0, 0.0]
 

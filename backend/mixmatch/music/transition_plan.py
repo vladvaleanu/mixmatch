@@ -8,7 +8,11 @@ Browserul (`frontend/src/audio/`) și ffmpeg (`export/`) execută același plan,
 - B se redă de la `b_start_s` (în fișierul ei) la viteza `speed_b` (stil vinil); dacă `b_start_s`
   e negativ, B începe să cânte abia la t = −b_start_s / speed_b;
 - automatizările dau volumul (0–1), basul (dB) și ecoul (0–1) pe fiecare deck, cu puncte
-  liniare; două puncte cu același `t` = schimbare bruscă.
+  liniare; două puncte cu același `t` = schimbare bruscă;
+- basul e un filtru low-shelf la `bass_shelf_hz`; ecoul e o sumă de copii întârziate
+  (`echo_taps`: întârziere, volum), alimentată de A după filtru și înainte de volumul ei, și
+  trimisă direct la ieșire (coada rămâne după ce A e oprită);
+- `preview_start_s` … `preview_end_s` e fereastra de ascultat (câteva bare înainte și după).
 """
 
 import math
@@ -42,8 +46,11 @@ TARGET_LUFS = -12.0  # auto-gain
 GAIN_MIN_DB, GAIN_MAX_DB = -12.0, 6.0
 BASS_CUT_DB = -26.0  # basul „scos” la schimbul de bas
 ECHO_WET = 0.6
-ECHO_FEEDBACK = 0.45
+ECHO_FEEDBACK = 0.45  # fiecare repetare e de atâtea ori mai încetă decât precedenta
+ECHO_TAPS = 6  # repetări (0,45⁶ ≈ 0,8 %: restul nu se mai aude)
 ECHO_BEATS = 0.75  # întârzierea ecoului: trei sferturi de beat
+BASS_SHELF_HZ = 150.0
+PREVIEW_BARS = 4  # cât se aude înainte și după tranziție, la previzualizare
 CROSSFADE_STEPS = 8  # puncte pentru curba de putere constantă
 
 
@@ -72,6 +79,12 @@ class Automation:
 
 
 @dataclass(frozen=True)
+class EchoTap:
+    delay_s: float
+    gain: float
+
+
+@dataclass(frozen=True)
 class Plan:
     style: Style
     length_bars: int
@@ -83,8 +96,10 @@ class Plan:
     speed_b: float
     gain_a_db: float
     gain_b_db: float
-    echo_delay_s: float
-    echo_feedback: float
+    bass_shelf_hz: float
+    echo_taps: list[EchoTap]
+    preview_start_s: float
+    preview_end_s: float
     automations: list[Automation]
 
 
@@ -130,6 +145,15 @@ def fit_length(requested: int, a: Side, b: Side, a_out_s: float, b_in_s: float) 
     b_left = (b.duration_s - b_in_s) / speed / bar_s(a.bpm)
     fitting = [n for n in LENGTHS if n <= requested and n <= a_left and n <= b_left]
     return fitting[-1] if fitting else LENGTHS[0]
+
+
+def echo_taps(bpm: float) -> list[EchoTap]:
+    """Repetările ecoului: la fiecare ¾ de beat, fiecare cu 45 % din volumul precedentei."""
+    delay = ECHO_BEATS * 60.0 / bpm
+    return [
+        EchoTap(delay_s=round(delay * k, 4), gain=round(ECHO_FEEDBACK ** (k - 1), 4))
+        for k in range(1, ECHO_TAPS + 1)
+    ]
 
 
 def recommend(label: Label | None) -> tuple[int, Style]:
@@ -212,7 +236,9 @@ def build_plan(
         speed_b=round(speed, 5),
         gain_a_db=gain_db(a.loudness_lufs),
         gain_b_db=gain_db(b.loudness_lufs),
-        echo_delay_s=round(ECHO_BEATS * 60.0 / a.bpm, 4),
-        echo_feedback=ECHO_FEEDBACK,
+        bass_shelf_hz=BASS_SHELF_HZ,
+        echo_taps=echo_taps(a.bpm),
+        preview_start_s=round(-PREVIEW_BARS * bar_s(a.bpm), 3),
+        preview_end_s=round(length_s + PREVIEW_BARS * bar_s(a.bpm), 3),
         automations=automations,
     )

@@ -5,6 +5,12 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Previzualizarea tranziției: backendul decupează cu ffmpeg doar fereastra necesară din A și din B (`GET /tracks/{id}/clip`, WAV 44,1 kHz); browserul le redă cu `AudioBufferSourceNode` (start exact la eșantion, `playbackRate` = viteză și ton) | Fără decodarea pieselor întregi în browser (~130 MB fiecare); același decodor ca exportul |
+| 2026-11-20 | Ecoul din plan = 6 copii întârziate (¾ de beat, fiecare cu 45 % din precedenta), `echo_taps` în plan, nu o buclă de feedback | ffmpeg (10a) poate reproduce exact o sumă de întârzieri, nu și bucla Web Audio |
+| 2026-11-20 | Planul include `bass_shelf_hz` (150 Hz) și fereastra de ascultat (4 bare înainte și după: `preview_start_s`, `preview_end_s`) | Tot ce se aude vine din plan |
+| 2026-11-20 | Analiza decodează cu ffmpeg (nu cu decodorul Essentia); `analysis_version` = 4 | Decodorul Essentia păstrează amorsarea AAC (~40 ms măsurat la M4A); analiza, bucățile și exportul trebuie să aibă aceeași cronologie |
+| 2026-11-20 | Un singur lucru se aude odată: previzualizarea oprește playerul și invers; ieșirea din ecran sau un plan nou opresc previzualizarea | Regula din pasul 4 |
+| 2026-11-20 | Testele API folosesc un singur fixture `client` (conftest) care așteaptă joburile în curs și golește baza înainte și după fiecare test | Un job de analiză rămas de la un test suprascria datele testului următor |
 | 2026-11-20 | Planul tranziției (`music/transition_plan.py`): timpii în secunde de la începutul tranziției; A pornește de la `a_start_s`, B de la `b_start_s` (poate fi negativ = B încă tace) la viteza `speed_b`; automatizări liniare pentru `a_volume`, `b_volume` (0–1), `a_bass`, `b_bass` (dB), `a_echo` (0–1); două puncte cu același t = salt | O singură descriere, executată de browser (8b) și de ffmpeg (10a) |
 | 2026-11-20 | Stilurile: Schimb de bas = B crește pe prima jumătate, basurile se schimbă la mijloc (−26 dB), A scade pe a doua; Crossfade = putere constantă (cos/sin); Ecou = A cu ecou crescător pe prima jumătate, tăiată la mijloc, coada ecoului rămâne, B intră la mijloc; Tăietură = schimbare la final | Comportamentul clasic al fiecărui stil |
 | 2026-11-20 | Punctele implicite: ieșirea din A la începutul outro-ului (sau `lungime` bare înainte de final, dacă outro-ul e mai scurt), rotunjită în jos la frază; intrarea în B la primul beat. Punctele alese de mână se lipesc de cea mai apropiată frază (8 bare) | Pe o piesă reală, ieșirea implicită a căzut exact unde scade forma de undă a lui A |

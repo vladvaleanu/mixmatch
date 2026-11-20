@@ -75,7 +75,20 @@ def test_echo_out_starts_b_at_the_cut() -> None:
     half = plan.length_s / 2
     assert plan.b_start_s == pytest.approx(B.first_beat_s - half * plan.speed_b, abs=0.001)
     assert points(plan, "a_echo")[1] == (round(half, 3), 0.6)
-    assert plan.echo_delay_s == pytest.approx(0.75 * 60 / 124, abs=1e-4)
+    delay = 0.75 * 60 / 124
+    assert [(t.delay_s, t.gain) for t in plan.echo_taps[:3]] == [
+        (pytest.approx(delay, abs=1e-4), 1.0),
+        (pytest.approx(2 * delay, abs=1e-4), 0.45),
+        (pytest.approx(3 * delay, abs=1e-4), pytest.approx(0.2025, abs=1e-4)),
+    ]
+    assert len(plan.echo_taps) == 6
+
+
+def test_preview_window_has_four_bars_around() -> None:
+    plan = build_plan(A, B)
+    assert plan.preview_start_s == pytest.approx(-4 * BAR_A, abs=0.001)
+    assert plan.preview_end_s == pytest.approx(plan.length_s + 4 * BAR_A, abs=0.001)
+    assert plan.bass_shelf_hz == 150.0
 
 
 def test_cut_swaps_at_the_end() -> None:

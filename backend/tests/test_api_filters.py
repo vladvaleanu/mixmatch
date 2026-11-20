@@ -1,12 +1,8 @@
-from collections.abc import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
 
-from mixmatch.db.models import Job, LibraryFolder, Mix, MixItem, Track, Transition, Waveform
+from mixmatch.db.models import Track
 from mixmatch.db.session import SessionLocal
-from mixmatch.main import app
 
 LIBRARY = [
     # titlu, artist, bpm, ton, energie, energie manuală, durată
@@ -20,11 +16,10 @@ LIBRARY = [
 
 
 @pytest.fixture
-def client() -> Iterator[TestClient]:
-    with TestClient(app) as test_client:
+def client(client: TestClient) -> TestClient:
+    """Clientul din conftest, cu o bibliotecă mică și analizată."""
+    if True:
         with SessionLocal.begin() as session:
-            for model in (Transition, MixItem, Mix, Waveform, Track, LibraryFolder, Job):
-                session.execute(delete(model))
             for i, (title, artist, bpm, key, energy, manual, duration) in enumerate(LIBRARY):
                 session.add(
                     Track(
@@ -39,7 +34,7 @@ def client() -> Iterator[TestClient]:
                         duration_s=duration,
                     )
                 )
-        yield test_client
+    return client
 
 
 def titles(client: TestClient, query: str = "") -> list[str]:

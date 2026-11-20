@@ -70,6 +70,7 @@ export const ro = {
     play: (title: string) => `Ascultă ${title}`,
     pause: (title: string) => `Pauză ${title}`,
     error: 'Nu pot reda piesa. Verifică dacă fișierul mai există.',
+    previewError: 'Nu pot reda tranziția. Verifică dacă fișierele mai există.',
     seek: 'Derulează',
   },
   panel: {
@@ -227,6 +228,9 @@ export const ro = {
     automatic: 'automat',
     resetPoints: 'Puncte automate',
     auto: 'Alege aplicația pentru mine',
+    listen: 'Ascultă tranziția',
+    loading: 'Se pregătește…',
+    stop: 'Oprește',
     notAnalyzed: 'Tranziția se poate planifica după analiza ambelor piese.',
   },
   addToMix: {

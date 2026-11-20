@@ -27,7 +27,8 @@ class Settings:
     min_duration_s: float = 60.0
     # Crește când se schimbă algoritmii de analiză: piesele analizate cu o versiune mai veche
     # se reanalizează automat.
-    analysis_version: int = 3  # 2: energie, tărie, formă de undă, intro/outro; 3: undă RMS
+    # 2: energie, tărie, formă de undă, intro/outro; 3: undă RMS; 4: decodare cu ffmpeg
+    analysis_version: int = 4
     # Câte piese se analizează în paralel (procese separate).
     analysis_workers: int = field(default_factory=lambda: max(1, min(6, (os.cpu_count() or 2) - 2)))
 

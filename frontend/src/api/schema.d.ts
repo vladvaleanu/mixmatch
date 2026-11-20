@@ -185,6 +185,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tracks/{track_id}/clip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Track Clip
+         * @description O bucată din piesă (WAV, 44,1 kHz), pentru previzualizarea unei tranziții.
+         */
+        get: operations["get_track_clip"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mixes": {
         parameters: {
             query?: never;
@@ -330,6 +350,13 @@ export interface components {
             target: "a_volume" | "b_volume" | "a_bass" | "b_bass" | "a_echo";
             /** Points */
             points: components["schemas"]["PointOut"][];
+        };
+        /** EchoTapOut */
+        EchoTapOut: {
+            /** Delay S */
+            delay_s: number;
+            /** Gain */
+            gain: number;
         };
         /** EnergyPointOut */
         EnergyPointOut: {
@@ -482,10 +509,14 @@ export interface components {
             gain_a_db: number;
             /** Gain B Db */
             gain_b_db: number;
-            /** Echo Delay S */
-            echo_delay_s: number;
-            /** Echo Feedback */
-            echo_feedback: number;
+            /** Bass Shelf Hz */
+            bass_shelf_hz: number;
+            /** Echo Taps */
+            echo_taps: components["schemas"]["EchoTapOut"][];
+            /** Preview Start S */
+            preview_start_s: number;
+            /** Preview End S */
+            preview_end_s: number;
             /** Automations */
             automations: components["schemas"]["AutomationOut"][];
             /** A Out Auto */
@@ -994,6 +1025,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_track_clip: {
+        parameters: {
+            query: {
+                start_s: number;
+                end_s: number;
+            };
+            header?: never;
+            path: {
+                track_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "audio/wav": unknown;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };

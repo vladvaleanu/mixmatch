@@ -1,8 +1,10 @@
-import type { CSSProperties } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import type { Schemas } from '../../api/client';
+import { fetchClip } from '../../api/tracks';
 import { useTransition, useUpdateTransition } from '../../api/transitions';
+import { transitionPreview, usePreview } from '../../audio/engine';
 import { ro } from '../../i18n/ro';
 import { color, font, fontSize, radius, size, space } from '../../theme/tokens';
 import { Button } from '../../ui/Button';
@@ -160,6 +162,12 @@ export function TransitionScreen() {
   const transition = useTransition(mixId, position);
   const update = useUpdateTransition(mixId, position);
   const e = ro.transitionEditor;
+  const previewKey = `${mixId}/${position}`;
+  const preview = usePreview((s) => (s.key === previewKey ? s : null));
+
+  // Ieșirea din ecran sau un plan nou opresc previzualizarea (s-ar auzi un plan vechi).
+  const planVersion = JSON.stringify(transition.data?.plan ?? null);
+  useEffect(() => () => transitionPreview.stop(), [planVersion]);
 
   if (transition.isError) {
     return (
@@ -222,7 +230,7 @@ export function TransitionScreen() {
         <Chips t={t} />
       </div>
 
-      <TransitionView transition={t} />
+      <TransitionView transition={t} playheadT={preview?.t ?? null} />
 
       <div
         style={{
@@ -328,7 +336,36 @@ export function TransitionScreen() {
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: space[10] }}>
-        <Button onClick={() => update.mutate({ auto: true })} disabled={update.isPending}>
+        <Button
+          variant="primary"
+          style={{ height: 48, padding: `0 ${space[22]}px` }}
+          disabled={preview?.status === 'loading'}
+          onClick={() =>
+            preview?.status === 'playing'
+              ? transitionPreview.stop()
+              : void transitionPreview.play(previewKey, plan, (deck, range) =>
+                  fetchClip(deck === 'a' ? t.from_track.id : t.to_track.id, range.fromS, range.toS),
+                )
+          }
+        >
+          <svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true">
+            {preview?.status === 'playing' ? (
+              <path d="M2 2h8v8H2z" fill="currentColor" />
+            ) : (
+              <path d="M3 1.5v9l7.5-4.5z" fill="currentColor" />
+            )}
+          </svg>
+          {preview?.status === 'loading'
+            ? e.loading
+            : preview?.status === 'playing'
+              ? e.stop
+              : e.listen}
+        </Button>
+        <Button
+          onClick={() => update.mutate({ auto: true })}
+          disabled={update.isPending}
+          style={{ height: 48 }}
+        >
           {e.auto}
         </Button>
       </div>

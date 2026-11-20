@@ -1,4 +1,5 @@
 import type { Schemas } from '../../api/client';
+import { valueAt } from '../../audio/plan';
 import { useWaveform } from '../../api/tracks';
 import { ro } from '../../i18n/ro';
 import { color, fontSize, space } from '../../theme/tokens';
@@ -14,20 +15,6 @@ const LANE_H = 64;
 const LINES_H = 72;
 const BARS = 180;
 const BASS_RANGE_DB = 26;
-
-/** Valoarea unei automatizări la momentul t (puncte liniare; înainte/după: primul/ultimul). */
-function valueAt(points: Automation['points'], t: number): number {
-  let previous: Automation['points'][number] | undefined;
-  for (const point of points) {
-    if (t <= point.t_s) {
-      if (!previous || point.t_s === previous.t_s) return point.value;
-      const k = (t - previous.t_s) / (point.t_s - previous.t_s);
-      return previous.value + (point.value - previous.value) * k;
-    }
-    previous = point;
-  }
-  return previous?.value ?? 0;
-}
 
 /** Bare din vârfurile `hi` pe intervalul [fromS, toS] al fișierului. */
 function slice(
@@ -78,7 +65,14 @@ function Lane({ values, fill, label }: { values: (number | null)[]; fill: string
   );
 }
 
-export function TransitionView({ transition }: { transition: Transition }) {
+export function TransitionView({
+  transition,
+  playheadT,
+}: {
+  transition: Transition;
+  /** Momentul redat acum (timpul tranziției), pentru cursor. */
+  playheadT: number | null;
+}) {
   const { plan, from_track: a, to_track: b } = transition;
   const waveA = useWaveform(a.id, 'hi').data?.peaks;
   const waveB = useWaveform(b.id, 'hi').data?.peaks;
@@ -165,6 +159,20 @@ export function TransitionView({ transition }: { transition: Transition }) {
         >
           {ro.transitionEditor.overlap(plan.length_bars, Math.round(L))}
         </span>
+        {playheadT !== null && (
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: -space[20],
+              bottom: 0,
+              left: `${x(playheadT) / 10}%`,
+              width: 2,
+              background: color.text,
+              zIndex: 1,
+            }}
+          />
+        )}
         <div style={{ width: `${x(L) / 10}%` }}>
           <Lane values={laneA} fill={color.waveIdle} label={ro.transitionEditor.deckA(a.title)} />
         </div>

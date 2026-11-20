@@ -1,21 +1,8 @@
-from collections.abc import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
 
-from mixmatch.db.models import Job, LibraryFolder, Mix, MixItem, Track, Transition, Waveform
+from mixmatch.db.models import Track
 from mixmatch.db.session import SessionLocal
-from mixmatch.main import app
-
-
-@pytest.fixture
-def client() -> Iterator[TestClient]:
-    with TestClient(app) as test_client:
-        with SessionLocal.begin() as session:
-            for model in (Transition, MixItem, Mix, Waveform, Track, LibraryFolder, Job):
-                session.execute(delete(model))
-        yield test_client
 
 
 @pytest.fixture

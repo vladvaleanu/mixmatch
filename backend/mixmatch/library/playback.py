@@ -5,6 +5,7 @@ MP3, FLAC, WAV și M4A merg direct. AIFF nu se poate reda în Chrome, așa că s
 """
 
 import subprocess
+import tempfile
 from pathlib import Path
 
 from mixmatch.config import settings
@@ -36,3 +37,31 @@ def playable_file(path: Path, file_hash: str) -> tuple[Path, str]:
         )
         partial.replace(cached)  # atomic: o cerere paralelă nu vede un fișier pe jumătate
     return cached, MEDIA_TYPES[".flac"]
+
+
+CLIP_SAMPLE_RATE = 44100
+MAX_CLIP_S = 300.0
+
+
+def render_clip(path: Path, start_s: float, end_s: float) -> bytes:
+    """O bucată din piesă ca WAV stereo 16-bit, 44,1 kHz, decodată de ffmpeg.
+
+    Previzualizarea tranzițiilor folosește bucăți, nu piese întregi: decodare mică în browser și
+    același decodor ca exportul. Ridică FileNotFoundError dacă sursa lipsește.
+    """
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    # Într-un fișier, nu într-un pipe: așa ffmpeg scrie în antet lungimea corectă.
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "clip.wav"
+        subprocess.run(
+            [
+                "ffmpeg", "-v", "error",
+                "-ss", f"{start_s:.6f}", "-t", f"{end_s - start_s:.6f}",
+                "-i", str(path), "-map", "0:a:0",
+                "-ac", "2", "-ar", str(CLIP_SAMPLE_RATE), "-c:a", "pcm_s16le", str(out),
+            ],
+            check=True,
+            capture_output=True,
+        )  # fmt: skip
+        return out.read_bytes()

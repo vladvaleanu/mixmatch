@@ -104,3 +104,17 @@ export function useWaveform(trackId: number | null, res: 'lo' | 'hi' = 'lo') {
     meta: { silent: true }, // fără formă de undă, panoul arată doar un loc gol
   });
 }
+
+/** O bucată de audio (WAV) dintr-o piesă, pentru previzualizarea tranzițiilor. */
+export async function fetchClip(
+  trackId: number,
+  startS: number,
+  endS: number,
+): Promise<ArrayBuffer> {
+  const { data, error, response } = await http.GET('/api/tracks/{track_id}/clip', {
+    params: { path: { track_id: trackId }, query: { start_s: startS, end_s: endS } },
+    parseAs: 'arrayBuffer',
+  });
+  if (data === undefined) await unwrap(Promise.resolve({ error, response }));
+  return data as ArrayBuffer;
+}

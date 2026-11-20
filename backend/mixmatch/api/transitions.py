@@ -31,6 +31,11 @@ class PointOut(BaseModel):
     value: float
 
 
+class EchoTapOut(BaseModel):
+    delay_s: float
+    gain: float
+
+
 class AutomationOut(BaseModel):
     target: Literal["a_volume", "b_volume", "a_bass", "b_bass", "a_echo"]
     points: list[PointOut]
@@ -50,8 +55,10 @@ class PlanOut(BaseModel):
     speed_b: float
     gain_a_db: float
     gain_b_db: float
-    echo_delay_s: float
-    echo_feedback: float
+    bass_shelf_hz: float
+    echo_taps: list[EchoTapOut]
+    preview_start_s: float  # fereastra de ascultat, în timpul tranziției (negativ = înainte)
+    preview_end_s: float
     automations: list[AutomationOut]
     a_out_auto: bool  # punctul de ieșire e ales automat
     b_in_auto: bool
@@ -156,8 +163,10 @@ def _out(session: Session, mix: Mix, position: int) -> TransitionOut:
             speed_b=plan.speed_b,
             gain_a_db=plan.gain_a_db,
             gain_b_db=plan.gain_b_db,
-            echo_delay_s=plan.echo_delay_s,
-            echo_feedback=plan.echo_feedback,
+            bass_shelf_hz=plan.bass_shelf_hz,
+            echo_taps=[EchoTapOut(delay_s=e.delay_s, gain=e.gain) for e in plan.echo_taps],
+            preview_start_s=plan.preview_start_s,
+            preview_end_s=plan.preview_end_s,
             automations=[
                 AutomationOut(
                     target=auto.target,  # type: ignore[arg-type]

@@ -2,14 +2,14 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 
 from mixmatch.api.deps import SessionDep
 from mixmatch.api.errors import ApiError, responses
 from mixmatch.db.models import MixItem, Track, Waveform
-from mixmatch.library.playback import playable_file
+from mixmatch.library.playback import MAX_CLIP_S, playable_file, render_clip
 from mixmatch.music.camelot import classic_name, parse
 from mixmatch.music.compat import Label, TrackInfo, match, suggestion_rank
 
@@ -233,3 +233,26 @@ def get_track_waveform(
     if waveform is None:
         raise ApiError(404, "waveform_not_ready", "Forma de undă apare după analiza piesei.")
     return WaveformOut(peaks=list(waveform.peaks if res == "lo" else waveform.peaks_hi))
+
+
+@router.get(
+    "/tracks/{track_id}/clip",
+    operation_id="get_track_clip",
+    response_class=Response,
+    responses={**responses(404, 422), 200: {"content": {"audio/wav": {}}}},
+)
+def get_track_clip(
+    track_id: int,
+    session: SessionDep,
+    start_s: Annotated[float, Field(ge=0)],
+    end_s: Annotated[float, Field(gt=0)],
+) -> Response:
+    """O bucată din piesă (WAV, 44,1 kHz), pentru previzualizarea unei tranziții."""
+    track = _get_track(session, track_id)
+    if end_s <= start_s or end_s - start_s > MAX_CLIP_S:
+        raise ApiError(422, "bad_clip", f"Bucata trebuie să aibă între 0 și {MAX_CLIP_S:.0f} s.")
+    try:
+        wav = render_clip(Path(track.path), start_s, min(end_s, track.duration_s))
+    except FileNotFoundError as exc:
+        raise ApiError(404, "file_missing", f"Fișierul nu mai există: {track.path}") from exc
+    return Response(content=wav, media_type="audio/wav")

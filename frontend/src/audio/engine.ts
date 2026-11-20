@@ -4,6 +4,8 @@ import { create } from 'zustand';
 
 import { ro } from '../i18n/ro';
 import { showToast } from '../ui/toastStore';
+import { clipRanges, type ClipRange, type Plan } from './plan';
+import { previewLength, scheduleTransition } from './transition';
 
 export type PlayerState = {
   trackId: number | null;
@@ -23,6 +25,11 @@ let element: HTMLAudioElement | null = null;
 let context: AudioContext | null = null;
 let frame = 0;
 
+function audioContext(): AudioContext {
+  context ??= new AudioContext();
+  return context;
+}
+
 function tick() {
   if (!element) return;
   usePlayer.setState({ positionS: element.currentTime });
@@ -35,8 +42,8 @@ function audioElement(): HTMLAudioElement {
   audio.preload = 'auto';
   // Trece prin AudioContext ca pașii următori (tranziții, câștig) să aibă unde să se lege.
   if (typeof AudioContext !== 'undefined') {
-    context = new AudioContext();
-    context.createMediaElementSource(audio).connect(context.destination);
+    const ctx = audioContext();
+    ctx.createMediaElementSource(audio).connect(ctx.destination);
   }
   audio.addEventListener('play', () => {
     usePlayer.setState({ playing: true });
@@ -70,6 +77,7 @@ function load(trackId: number, url: string, durationS: number) {
 }
 
 function start(audio: HTMLAudioElement) {
+  transitionPreview.stop(); // un singur lucru se aude odată
   void context?.resume();
   audio.play().catch(() => {
     /* eroarea de redare ajunge prin evenimentul `error` */
@@ -94,5 +102,73 @@ export const player = {
 
   pause() {
     element?.pause();
+  },
+};
+
+// ——— Previzualizarea unei tranziții ———
+
+export type PreviewState = {
+  key: string | null; // ce tranziție (ex. „7/3”)
+  status: 'idle' | 'loading' | 'playing';
+  /** Momentul curent în timpul tranziției (0 = începutul ei), cât cântă. */
+  t: number | null;
+};
+
+export const usePreview = create<PreviewState>(() => ({ key: null, status: 'idle', t: null }));
+
+/** Încarcă o bucată de audio (WAV) dintr-o piesă: e dat de cine cheamă, prin `api/`. */
+export type ClipLoader = (deck: 'a' | 'b', range: ClipRange) => Promise<ArrayBuffer>;
+
+let stopPreview: (() => void) | null = null;
+let previewFrame = 0;
+let previewRun = 0;
+
+export const transitionPreview = {
+  /** Cântă fereastra tranziției, exclusiv din plan și din bucățile încărcate. */
+  async play(key: string, plan: Plan, load: ClipLoader) {
+    transitionPreview.stop();
+    element?.pause();
+    const run = ++previewRun;
+    usePreview.setState({ key, status: 'loading', t: null });
+    const ctx = audioContext();
+    void ctx.resume();
+    try {
+      const ranges = clipRanges(plan);
+      const [a, b] = await Promise.all([
+        load('a', ranges.a).then((data) => ctx.decodeAudioData(data)),
+        load('b', ranges.b).then((data) => ctx.decodeAudioData(data)),
+      ]);
+      if (run !== previewRun) return; // între timp s-a cerut altceva
+      const startAt = ctx.currentTime + 0.1;
+      const stop = scheduleTransition(ctx, plan, { a, b }, ctx.destination, startAt);
+      const length = previewLength(plan);
+      stopPreview = stop;
+      usePreview.setState({ status: 'playing' });
+      const tick = () => {
+        const elapsed = ctx.currentTime - startAt;
+        if (elapsed >= length) {
+          transitionPreview.stop();
+          return;
+        }
+        usePreview.setState({ t: plan.preview_start_s + Math.max(0, elapsed) });
+        previewFrame = requestAnimationFrame(tick);
+      };
+      previewFrame = requestAnimationFrame(tick);
+    } catch {
+      if (run === previewRun) {
+        usePreview.setState({ key: null, status: 'idle', t: null });
+        showToast(ro.player.previewError);
+      }
+    }
+  },
+
+  stop() {
+    previewRun++;
+    cancelAnimationFrame(previewFrame);
+    stopPreview?.();
+    stopPreview = null;
+    if (usePreview.getState().status !== 'idle') {
+      usePreview.setState({ key: null, status: 'idle', t: null });
+    }
   },
 };

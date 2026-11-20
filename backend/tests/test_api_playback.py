@@ -1,24 +1,12 @@
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
 
 from mixmatch.config import settings
-from mixmatch.db.models import Job, LibraryFolder, Mix, MixItem, Track, Transition, Waveform
+from mixmatch.db.models import Track, Waveform
 from mixmatch.db.session import SessionLocal
-from mixmatch.main import app
 from tests.audio import make_audio
-
-
-@pytest.fixture
-def client() -> Iterator[TestClient]:
-    with TestClient(app) as test_client:
-        with SessionLocal.begin() as session:
-            for model in (Transition, MixItem, Mix, Waveform, Track, LibraryFolder, Job):
-                session.execute(delete(model))
-        yield test_client
 
 
 def add_track(path: Path, file_hash: str = "hash", waveform: bool = False) -> int:
@@ -102,3 +90,28 @@ def test_waveform_before_analysis_is_404(client: TestClient, tmp_path: Path) -> 
 def test_waveform_rejects_unknown_resolution(client: TestClient, tmp_path: Path) -> None:
     track_id = add_track(tmp_path / "a.mp3", waveform=True)
     assert client.get(f"/api/tracks/{track_id}/waveform?res=max").status_code == 422
+
+
+def test_clip_is_an_exact_wav_slice(client: TestClient, tmp_path: Path) -> None:
+    import io
+    import wave
+
+    track_id = add_track(make_audio(tmp_path / "a.flac", duration_s=10))
+    with SessionLocal.begin() as session:
+        session.get(Track, track_id).duration_s = 10.0  # type: ignore[union-attr]
+
+    response = client.get(f"/api/tracks/{track_id}/clip?start_s=2.5&end_s=4")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "audio/wav"
+    with wave.open(io.BytesIO(response.content)) as w:
+        assert (w.getnchannels(), w.getframerate(), w.getsampwidth()) == (2, 44100, 2)
+        assert w.getnframes() == pytest.approx(1.5 * 44100, abs=2)
+
+
+@pytest.mark.parametrize(
+    "query", ["start_s=4&end_s=2", "start_s=0&end_s=400", "start_s=-1&end_s=2"]
+)
+def test_bad_clip_ranges(client: TestClient, tmp_path: Path, query: str) -> None:
+    track_id = add_track(make_audio(tmp_path / "a.mp3"))
+    response = client.get(f"/api/tracks/{track_id}/clip?{query}")
+    assert response.status_code == 422

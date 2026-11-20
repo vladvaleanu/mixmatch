@@ -1,24 +1,12 @@
 import time
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
 
-from mixmatch.db.models import Job, LibraryFolder, Mix, MixItem, Track, Transition, Waveform
+from mixmatch.db.models import Track
 from mixmatch.db.session import SessionLocal
-from mixmatch.main import app
 from tests.audio import make_audio, make_music
-
-
-@pytest.fixture
-def client() -> Iterator[TestClient]:
-    with TestClient(app) as test_client:  # pornește lifespan-ul: migrări pe baza de test
-        with SessionLocal.begin() as session:
-            for model in (Transition, MixItem, Mix, Waveform, Track, LibraryFolder, Job):
-                session.execute(delete(model))
-        yield test_client
 
 
 def wait_for_job(client: TestClient, job_id: int) -> dict[str, object]:
