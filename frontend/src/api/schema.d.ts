@@ -112,6 +112,9 @@ export interface paths {
          * @description Piesele care merg bine după aceasta (Lin sau Bun): întâi Lin, apoi după scor.
          *
          *     Același fișier aflat în mai multe foldere (același `file_hash`) apare o singură dată.
+         *     `exclude_mix`: fără piesele deja în acel mix. `target_energy`: energia dorită de curba
+         *     mixului pe poziția următoare; între sugestii de aceeași etichetă, cele mai apropiate de ea
+         *     urcă în listă.
          */
         get: operations["list_matches"];
         put?: never;
@@ -242,6 +245,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mixes/{mix_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Mix Report
+         * @description Etichetele tranzițiilor, curba de energie (dorită și reală) și avertismentele.
+         */
+        get: operations["get_mix_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -257,6 +280,15 @@ export interface components {
             folder_id: number;
             /** Job Id */
             job_id: number;
+        };
+        /** EnergyPointOut */
+        EnergyPointOut: {
+            /** Track Id */
+            track_id: number;
+            /** Actual */
+            actual: number | null;
+            /** Target */
+            target: number | null;
         };
         /**
          * EnergyShape
@@ -356,7 +388,8 @@ export interface components {
         /** MixPatch */
         MixPatch: {
             /** Name */
-            name: string;
+            name?: string | null;
+            energy_shape?: components["schemas"]["EnergyShape"] | null;
         };
         /** MixSummary */
         MixSummary: {
@@ -373,6 +406,27 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /**
+         * Problem
+         * @enum {string}
+         */
+        Problem: "key" | "tempo" | "energy";
+        /** ReportOut */
+        ReportOut: {
+            /** Mix Id */
+            mix_id: number;
+            /** Track Ids */
+            track_ids: number[];
+            energy_shape: components["schemas"]["EnergyShape"];
+            /** Transitions */
+            transitions: components["schemas"]["TransitionOut"][];
+            /** Energy */
+            energy: components["schemas"]["EnergyPointOut"][];
+            /** Next Target Energy */
+            next_target_energy: number | null;
+            /** Warnings */
+            warnings: components["schemas"]["WarningOut"][];
         };
         /** TrackOut */
         TrackOut: {
@@ -408,6 +462,19 @@ export interface components {
             /** Energy Manual */
             energy_manual: number | null;
         };
+        /** TransitionOut */
+        TransitionOut: {
+            /** Position */
+            position: number;
+            /** From Track Id */
+            from_track_id: number;
+            /** To Track Id */
+            to_track_id: number;
+            label: components["schemas"]["Label"] | null;
+            /** Reason */
+            reason: string | null;
+            problem: components["schemas"]["Problem"] | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -420,6 +487,14 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WarningOut */
+        WarningOut: {
+            /** Position */
+            position: number;
+            problem: components["schemas"]["Problem"];
+            /** Message */
+            message: string;
         };
         /** WaveformOut */
         WaveformOut: {
@@ -616,6 +691,8 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: number;
+                exclude_mix?: number | null;
+                target_energy?: number | null;
             };
             header?: never;
             path: {
@@ -995,6 +1072,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_mix_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

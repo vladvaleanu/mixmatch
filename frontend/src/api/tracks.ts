@@ -41,14 +41,19 @@ export function useTracks(filters?: TrackFilters) {
   });
 }
 
-/** „Merg bine după ea”: sugestiile pentru piesa dată, cele mai bune primele. */
-export function useMatches(trackId: number | null) {
+type MatchQuery = NonNullable<
+  paths['/api/tracks/{track_id}/matches']['get']['parameters']['query']
+>;
+
+/** „Merg bine după ea”: sugestiile pentru piesa dată, cele mai bune primele.
+ *  În Constructor: fără piesele mixului și după energia dorită de curbă. */
+export function useMatches(trackId: number | null, options: MatchQuery = {}) {
   return useQuery({
-    queryKey: [...matchesKey, trackId],
+    queryKey: [...matchesKey, trackId, options],
     queryFn: () =>
       unwrap(
         http.GET('/api/tracks/{track_id}/matches', {
-          params: { path: { track_id: trackId ?? 0 } },
+          params: { path: { track_id: trackId ?? 0 }, query: options },
         }),
       ),
     enabled: trackId !== null,

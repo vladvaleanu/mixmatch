@@ -5,6 +5,15 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Curbele dorite (`music/energy_curve.py`), pe t = 0…1: Încălzire 1,5 → 3,5; Urcare 2 → 5; Val 2,5 + 1,5·t + sin(4πt) (două valuri, urcând); Liber = fără curbă | Forme simple și previzibile; aceleași pentru raport, sugestii și ordonarea automată |
+| 2026-11-20 | `EnergyShape` stă în `music/energy_curve.py`; modelul `Mix` îl importă de acolo | Regulile muzicale nu depind de baza de date |
+| 2026-11-20 | `compat.match` spune și cauza unei etichete „Atenție” (`problem`): întâi tempo-ul, apoi tonul, apoi energia | La +28 % tonul se strică din cauza accelerării; problema reală e tempo-ul (găsit pe un mix real) |
+| 2026-11-20 | `GET /mixes/{id}/report`: tranzițiile (etichetă, motiv, cauză), energia reală și dorită pe fiecare poziție, energia dorită pentru următoarea piesă, avertismentele (text în română, din backend) și `track_ids` (ordinea pentru care e calculat) | UI-ul arată etichetele doar dacă raportul corespunde ordinii afișate |
+| 2026-11-20 | `/matches` primește `exclude_mix` (fără piesele mixului) și `target_energy` (energia dorită de curbă); în cadrul aceleiași etichete, scorul scade cu 8 puncte pe treaptă de distanță (`compat.suggestion_rank`) | „Ce urmează după …” folosește aceleași reguli ca „Merg bine după ea”, plus curba |
+| 2026-11-20 | `PATCH /mixes/{id}` acceptă `name` și/sau `energy_shape` | Forma setului se schimbă din segmented |
+| 2026-11-20 | Etichetele dintre carduri se ascund cât timp tragi o carte și reapar după ce serverul recalculează raportul | În timpul drag-ului ar arăta perechi vechi |
+| 2026-11-20 | Butonul „Rezolvă” din banner se mută în pasul 8a: deschide editorul tranziției cu problema | Înainte de editor nu are ce face |
+| 2026-11-20 | Documentul declară `color-scheme: dark` | Barele de derulare și controalele native urmează tema întunecată |
 | 2026-11-20 | Dependențe pasul 6: `@dnd-kit/core` 6, `@dnd-kit/sortable` 10, `@dnd-kit/utilities` 3 (nu `@dnd-kit/react`, încă 0.x) | Drag & drop din plan, cu suport de tastatură și anunțuri pentru cititoarele de ecran |
 | 2026-11-20 | `mix_items`: cheia (mix_id, position), unicitate (mix_id, track_id), `ON DELETE CASCADE` spre mix și spre piesă; `PUT /mixes/{id}/items` rescrie toate pozițiile | O piesă ștearsă de o rescanare dispare și din mixuri; ordinea e mereu 0..n−1 |
 | 2026-11-20 | `energy_shape` implicit `free` („Liber”); `PATCH /mixes/{id}` acceptă deocamdată doar numele (forma vine în pasul 7) | Fără câmpuri fără client |

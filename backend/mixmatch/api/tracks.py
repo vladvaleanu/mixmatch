@@ -8,10 +8,10 @@ from sqlalchemy import or_, select
 
 from mixmatch.api.deps import SessionDep
 from mixmatch.api.errors import ApiError, responses
-from mixmatch.db.models import Track, Waveform
+from mixmatch.db.models import MixItem, Track, Waveform
 from mixmatch.library.playback import playable_file
 from mixmatch.music.camelot import classic_name, parse
-from mixmatch.music.compat import Label, TrackInfo, label_rank, match
+from mixmatch.music.compat import Label, TrackInfo, match, suggestion_rank
 
 router = APIRouter(tags=["tracks"])
 
@@ -132,21 +132,33 @@ class MatchOut(BaseModel):
 
 @router.get("/tracks/{track_id}/matches", operation_id="list_matches", responses=responses(404))
 def list_matches(
-    track_id: int, session: SessionDep, limit: Annotated[int, Field(ge=1, le=50)] = 10
+    track_id: int,
+    session: SessionDep,
+    limit: Annotated[int, Field(ge=1, le=50)] = 10,
+    exclude_mix: int | None = None,
+    target_energy: Annotated[float | None, Field(ge=1, le=5)] = None,
 ) -> list[MatchOut]:
     """Piesele care merg bine după aceasta (Lin sau Bun): întâi Lin, apoi după scor.
 
     Același fișier aflat în mai multe foldere (același `file_hash`) apare o singură dată.
+    `exclude_mix`: fără piesele deja în acel mix. `target_energy`: energia dorită de curba
+    mixului pe poziția următoare; între sugestii de aceeași etichetă, cele mai apropiate de ea
+    urcă în listă.
     """
     current = _get_track(session, track_id)
     reference = TrackInfo.of(current)
     if reference is None:
         return []
-    rows = session.execute(
+    query = (
         select(Track, Waveform.preview)
         .outerjoin(Waveform, Waveform.track_id == Track.id)
         .where(Track.id != track_id)
     )
+    if exclude_mix is not None:
+        query = query.where(
+            Track.id.not_in(select(MixItem.track_id).where(MixItem.mix_id == exclude_mix))
+        )
+    rows = session.execute(query)
     found = []
     for track, preview in rows:
         info = TrackInfo.of(track)
@@ -155,8 +167,12 @@ def list_matches(
         result = match(reference, info)
         if result.label != Label.caution:
             found.append((result, track, preview))
+
     found.sort(
-        key=lambda item: (label_rank(item[0].label), -item[0].score, item[1].title.casefold())
+        key=lambda item: (
+            *suggestion_rank(item[0], item[1].energy_effective, target_energy),
+            item[1].title.casefold(),
+        )
     )
     unique, seen = [], set()
     for item in found:  # după sortare, deci rămâne cea mai bună copie

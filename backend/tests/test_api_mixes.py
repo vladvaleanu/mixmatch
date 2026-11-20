@@ -103,3 +103,79 @@ def test_editing_items_moves_mix_to_top(client: TestClient, ids: list[int]) -> N
 def test_unknown_mix_is_404(client: TestClient) -> None:
     response = client.put("/api/mixes/999999/items", json={"track_ids": []})
     assert response.json()["error"]["code"] == "mix_not_found"
+
+
+@pytest.fixture
+def analyzed(client: TestClient) -> list[int]:
+    rows = [  # titlu, bpm, ton, energie
+        ("Neon Tide", 122.0, "8A", 3),
+        ("Slow Orbit", 123.0, "9A", 3),
+        ("Low Sun", 126.0, "3B", 5),
+        ("Paper Lights", 124.0, "8A", 4),
+        ("Driftwood", 123.0, "8A", 2),
+    ]
+    with SessionLocal.begin() as session:
+        tracks = [
+            Track(
+                path=f"/a/{i}",
+                file_hash=f"a{i}",
+                title=t,
+                bpm=bpm,
+                key_camelot=key,
+                energy=e,
+                duration_s=300,
+            )  # fmt: skip
+            for i, (t, bpm, key, e) in enumerate(rows)
+        ]
+        session.add_all(tracks)
+        session.flush()
+        return [t.id for t in tracks]
+
+
+def test_report(client: TestClient, analyzed: list[int]) -> None:
+    mix_id = client.post("/api/mixes", json={"track_ids": analyzed[:3]}).json()["id"]
+    client.patch(f"/api/mixes/{mix_id}", json={"energy_shape": "rise"})
+
+    report = client.get(f"/api/mixes/{mix_id}/report").json()
+
+    assert report["track_ids"] == analyzed[:3]
+    assert report["energy_shape"] == "rise"
+    assert [t["label"] for t in report["transitions"]] == ["smooth", "caution"]
+    assert report["transitions"][1]["problem"] == "key"
+    assert [(p["actual"], p["target"]) for p in report["energy"]] == [(3, 2.0), (3, 3.5), (5, 5.0)]
+    assert report["next_target_energy"] == 5.0
+    assert [w["position"] for w in report["warnings"]] == [2]
+
+
+def test_reordering_updates_the_report(client: TestClient, analyzed: list[int]) -> None:
+    mix_id = client.post("/api/mixes", json={"track_ids": analyzed[:3]}).json()["id"]
+    order = [analyzed[2], analyzed[0], analyzed[1]]
+    client.put(f"/api/mixes/{mix_id}/items", json={"track_ids": order})
+    report = client.get(f"/api/mixes/{mix_id}/report").json()
+    assert report["track_ids"] == order
+    assert [t["from_track_id"] for t in report["transitions"]] == order[:2]
+
+
+def test_shape_patch_keeps_name(client: TestClient) -> None:
+    mix_id = client.post("/api/mixes", json={"name": "Set"}).json()["id"]
+    patched = client.patch(f"/api/mixes/{mix_id}", json={"energy_shape": "wave"}).json()
+    assert (patched["name"], patched["energy_shape"]) == ("Set", "wave")
+    assert client.patch(f"/api/mixes/{mix_id}", json={"energy_shape": "zigzag"}).status_code == 422
+
+
+def test_suggestions_skip_the_mix_and_follow_the_curve(
+    client: TestClient, analyzed: list[int]
+) -> None:
+    neon, slow, _, paper, drift = analyzed
+    mix_id = client.post("/api/mixes", json={"track_ids": [slow, neon]}).json()["id"]
+
+    def titles(query: str) -> list[str]:
+        return [
+            m["track"]["title"] for m in client.get(f"/api/tracks/{neon}/matches{query}").json()
+        ]
+
+    assert "Slow Orbit" in titles("")
+    assert "Slow Orbit" not in titles(f"?exclude_mix={mix_id}")
+    # Paper Lights (E4) și Driftwood (E2) sunt amândouă Lin după Neon Tide: curba decide.
+    assert titles(f"?exclude_mix={mix_id}&target_energy=4")[0] == "Paper Lights"
+    assert titles(f"?exclude_mix={mix_id}&target_energy=2")[0] == "Driftwood"

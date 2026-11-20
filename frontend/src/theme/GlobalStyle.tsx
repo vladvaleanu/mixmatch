@@ -3,6 +3,7 @@ import { color, font, fontSize } from './tokens';
 // Stilurile de bază ale documentului, construite din tokens.
 const css = `
 *, *::before, *::after { box-sizing: border-box; }
+:root { color-scheme: dark; }
 body {
   margin: 0;
   background: ${color.bg};

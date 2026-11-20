@@ -142,3 +142,18 @@ def test_track_info_needs_analysis() -> None:
     assert TrackInfo.of(Fake(None, "8A")) is None
     assert TrackInfo.of(Fake(124, None)) is None
     assert TrackInfo.of(Fake(124, "8A")) == TrackInfo(124, "8A", 3)
+
+
+def test_problem_prefers_tempo_over_the_key_it_breaks() -> None:
+    # +28 %: tonul se strică din cauza accelerării; problema reală e tempo-ul.
+    result = match(info(122.0, "4A"), info(156.0, "4A"))
+    assert result.label == C
+    assert result.problem == "tempo"
+
+
+def test_problem_is_the_key_when_tempo_is_fine() -> None:
+    assert match(info(124.0, "8A"), info(124.0, "3B")).problem == "key"
+
+
+def test_no_problem_without_caution() -> None:
+    assert match(info(124.0, "8A"), info(124.0, "9A")).problem is None

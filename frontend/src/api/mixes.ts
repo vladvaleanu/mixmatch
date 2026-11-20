@@ -4,6 +4,7 @@ import { http, unwrap, type Schemas } from './client';
 
 export const mixesKey = ['mixes'] as const;
 const mixKey = (id: number) => [...mixesKey, id] as const;
+const reportKey = (id: number) => [...mixesKey, id, 'report'] as const;
 
 type Mix = Schemas['MixOut'];
 
@@ -23,13 +24,38 @@ export function useMix(mixId: number | null) {
   });
 }
 
-/** După orice schimbare: detaliul vine din răspuns, lista se reîncarcă. */
+/** După orice schimbare: detaliul vine din răspuns, lista și raportul se reîncarcă. */
 function useSaved() {
   const queryClient = useQueryClient();
   return (mix: Mix) => {
     queryClient.setQueryData(mixKey(mix.id), mix);
     void queryClient.invalidateQueries({ queryKey: mixesKey, exact: true });
+    void queryClient.invalidateQueries({ queryKey: reportKey(mix.id) });
   };
+}
+
+/** Etichetele tranzițiilor, curba de energie și avertismentele, calculate de server. */
+export function useMixReport(mixId: number) {
+  return useQuery({
+    queryKey: reportKey(mixId),
+    queryFn: () =>
+      unwrap(http.GET('/api/mixes/{mix_id}/report', { params: { path: { mix_id: mixId } } })),
+    placeholderData: (previous) => previous, // fără clipire cât se recalculează
+  });
+}
+
+export function useSetEnergyShape(mixId: number) {
+  const saved = useSaved();
+  return useMutation({
+    mutationFn: (energy_shape: Mix['energy_shape']) =>
+      unwrap(
+        http.PATCH('/api/mixes/{mix_id}', {
+          params: { path: { mix_id: mixId } },
+          body: { energy_shape },
+        }),
+      ),
+    onSuccess: saved,
+  });
 }
 
 export function useCreateMix() {

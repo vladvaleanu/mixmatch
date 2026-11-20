@@ -42,6 +42,26 @@ function mix(tracks = [a, b, c], name = 'Set de vineri') {
   };
 }
 
+function report(tracks = [a, b, c], extra: object = {}) {
+  return {
+    mix_id: 7,
+    track_ids: tracks.map((t) => t.id),
+    energy_shape: 'free',
+    transitions: tracks.slice(1).map((t, i) => ({
+      position: i + 1,
+      from_track_id: tracks[i]?.id,
+      to_track_id: t.id,
+      label: 'smooth',
+      reason: '8A → 8A · +1 BPM',
+      problem: null,
+    })),
+    energy: tracks.map((t) => ({ track_id: t.id, actual: 3, target: null })),
+    next_target_energy: null,
+    warnings: [],
+    ...extra,
+  };
+}
+
 async function body(api: ReturnType<typeof mockApi>, method: string, path: string) {
   const call = api.mock.calls
     .map(([req]) => req as Request)
@@ -80,6 +100,7 @@ describe('Mix-uri', () => {
       ],
       'POST /api/mixes': () => Response.json(mix([], 'Mix nou'), { status: 201 }),
       'GET /api/mixes/7': () => mix([], 'Mix nou'),
+      'GET /api/mixes/7/report': () => report([]),
     });
     renderWithProviders(
       <Routes>
@@ -115,6 +136,8 @@ describe('Constructorul de mix', () => {
   it('scoate o piesă și salvează noua ordine', async () => {
     const api = mockApi({
       'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(),
+      'GET /api/tracks/3/matches': () => [],
       'PUT /api/mixes/7/items': () => mix([a, c]),
     });
     renderBuilder();
@@ -129,6 +152,8 @@ describe('Constructorul de mix', () => {
     const d = track(4, 'Delta');
     const api = mockApi({
       'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(),
+      'GET /api/tracks/3/matches': () => [],
       'GET /api/tracks': () => [a, d],
       'PUT /api/mixes/7/items': () => mix([a, b, c, d]),
     });
@@ -146,6 +171,8 @@ describe('Constructorul de mix', () => {
   it('redenumește mixul', async () => {
     const api = mockApi({
       'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(),
+      'GET /api/tracks/3/matches': () => [],
       'PATCH /api/mixes/7': () => mix(undefined, 'Vârf de seară'),
     });
     renderBuilder();
@@ -162,6 +189,8 @@ describe('Constructorul de mix', () => {
   it('șterge mixul după confirmare', async () => {
     const api = mockApi({
       'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(),
+      'GET /api/tracks/3/matches': () => [],
       'DELETE /api/mixes/7': () => new Response(null, { status: 204 }),
     });
     renderBuilder();
@@ -172,6 +201,86 @@ describe('Constructorul de mix', () => {
 
     expect(await screen.findByText('lista')).toBeTruthy();
     expect(api.mock.calls.some(([r]) => (r as Request).method === 'DELETE')).toBe(true);
+  });
+});
+
+describe('Raportul mixului', () => {
+  it('arată etichetele dintre carduri și avertismentele', async () => {
+    mockApi({
+      'GET /api/mixes/7': () => mix(),
+      'GET /api/tracks/3/matches': () => [],
+      'GET /api/mixes/7/report': () => {
+        const r = report();
+        const second = r.transitions[1];
+        if (second) Object.assign(second, { label: 'caution', problem: 'key', reason: '8A → 3B' });
+        return {
+          ...r,
+          warnings: [
+            {
+              position: 2,
+              problem: 'key',
+              message: 'Între „Beta” și „Gama” tonalitățile se ciocnesc.',
+            },
+          ],
+        };
+      },
+    });
+    renderBuilder();
+
+    expect(await screen.findByRole('alert')).toHaveProperty(
+      'textContent',
+      'Între „Beta” și „Gama” tonalitățile se ciocnesc.',
+    );
+    const notes = screen.getAllByRole('note').map((n) => n.getAttribute('aria-label'));
+    expect(notes).toEqual([
+      ro.report.transition('Alfa', 'Beta', ro.transition.smooth, '8A → 8A · +1 BPM'),
+      ro.report.transition('Beta', 'Gama', ro.transition.caution, '8A → 3B'),
+    ]);
+  });
+
+  it('schimbă forma setului', async () => {
+    const api = mockApi({
+      'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(),
+      'GET /api/tracks/3/matches': () => [],
+      'PATCH /api/mixes/7': () => ({ ...mix(), energy_shape: 'rise' }),
+    });
+    renderBuilder();
+
+    fireEvent.click(await screen.findByRole('button', { name: ro.report.shapes.rise }));
+    await waitFor(async () =>
+      expect(await body(api, 'PATCH', '/api/mixes/7')).toEqual({ energy_shape: 'rise' }),
+    );
+    expect(
+      (await screen.findByRole('button', { name: ro.report.shapes.rise })).getAttribute(
+        'aria-pressed',
+      ),
+    ).toBe('true');
+  });
+
+  it('sugerează ce urmează după ultima piesă și o adaugă', async () => {
+    const d = track(4, 'Delta');
+    const api = mockApi({
+      'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(undefined, { next_target_energy: 4.5 }),
+      'GET /api/tracks/3/matches': () => [
+        { track: d, label: 'good', score: 80, reason: '8A → 10A · +1 BPM' },
+      ],
+      'PUT /api/mixes/7/items': () => mix([a, b, c, d]),
+    });
+    renderBuilder();
+
+    expect(await screen.findByText(ro.report.next('Gama'))).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: ro.report.addSuggestion('Delta') }));
+    await waitFor(async () =>
+      expect(await body(api, 'PUT', '/api/mixes/7/items')).toEqual({ track_ids: [1, 2, 3, 4] }),
+    );
+    const query = api.mock.calls
+      .map(([r]) => new URL((r as Request).url))
+      .filter((u) => u.pathname === '/api/tracks/3/matches')
+      .pop()?.searchParams;
+    expect(query?.get('exclude_mix')).toBe('7');
+    expect(query?.get('target_energy')).toBe('4.5');
   });
 });
 

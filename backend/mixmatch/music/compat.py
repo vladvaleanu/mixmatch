@@ -39,6 +39,21 @@ def label_rank(label: Label) -> int:
     return _ORDER.index(label)
 
 
+# Cât scade scorul unei sugestii pentru fiecare treaptă de energie față de curba mixului.
+CURVE_PENALTY = 8.0
+
+
+def suggestion_rank(
+    result: "Match", energy: int | None, target_energy: float | None = None
+) -> tuple[int, float]:
+    """Cheia de sortare a sugestiilor: întâi Lin, apoi Bun; în cadrul etichetei, scorul,
+    scăzut cu depărtarea de energia dorită de curbă (dacă e dată)."""
+    score = float(result.score)
+    if target_energy is not None and energy is not None:
+        score -= CURVE_PENALTY * abs(energy - target_energy)
+    return label_rank(result.label), -score
+
+
 def _worst(*labels: Label) -> Label:
     return max(labels, key=_ORDER.index)
 
@@ -65,6 +80,12 @@ class TrackInfo:
         return cls(bpm=track.bpm, key_camelot=track.key_camelot, energy=track.energy_effective)
 
 
+class Problem(StrEnum):
+    key = "key"
+    tempo = "tempo"
+    energy = "energy"
+
+
 @dataclass(frozen=True)
 class Match:
     label: Label
@@ -72,6 +93,10 @@ class Match:
     reason: str  # „8A → 9A · −1 BPM”
     speed: float  # viteza lui B ca să bată cu A (1.0 = neschimbată)
     key_after_sync: str  # tonul lui B la viteza aceea
+    tempo_diff_pct: float  # cât trebuie accelerată/încetinită B, în procente
+    # Ce face tranziția „Atenție”: întâi tempo-ul (de el depinde și tonul după sincronizare),
+    # apoi tonul, apoi energia.
+    problem: Problem | None
 
 
 @dataclass(frozen=True)
@@ -146,22 +171,25 @@ def match(a: TrackInfo, b: TrackInfo) -> Match:
     tempo = _tempo(a.bpm, b.bpm)
     key_after = shift(b.key_camelot, semitones(tempo.speed))
     key_label, key_quality = key_relation(a.key_camelot, key_after)
-    labels = [key_label, _tempo_label(tempo.diff_pct)]
+    parts = {Problem.tempo: _tempo_label(tempo.diff_pct), Problem.key: key_label}
 
     energy_quality = 1.0
     if a.energy is not None and b.energy is not None:
         jump = abs(b.energy - a.energy)
-        labels.append(_energy_label(jump))
+        parts[Problem.energy] = _energy_label(jump)
         energy_quality = max(0.0, 1 - jump / 4)
+    problem = next((p for p, label in parts.items() if label == Label.caution), None)
 
     tempo_quality = max(0.0, 1 - tempo.diff_pct / (2 * TEMPO_GOOD_PCT))
     score = 100 * (
         WEIGHT_KEY * key_quality + WEIGHT_TEMPO * tempo_quality + WEIGHT_ENERGY * energy_quality
     )
     return Match(
-        label=_worst(*labels),
+        label=_worst(*parts.values()),
         score=round(score),
         reason=_reason(a, b, tempo, key_after),
         speed=tempo.speed,
         key_after_sync=key_after,
+        tempo_diff_pct=tempo.diff_pct,
+        problem=problem,
     )

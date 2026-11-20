@@ -44,7 +44,7 @@ export function LibraryScreen() {
   const filtered = hasActiveFilters(filters);
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', flex: 1, alignItems: 'stretch' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', flex: 1, minWidth: 0, alignItems: 'stretch' }}>
       <aside
         style={{
           flex: '1 1 220px',

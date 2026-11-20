@@ -18,6 +18,8 @@ from sqlalchemy import (
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from mixmatch.music.energy_curve import EnergyShape
+
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
@@ -124,13 +126,6 @@ class Job(Base):
     progress: Mapped[float] = mapped_column(default=0.0)
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-
-class EnergyShape(StrEnum):
-    warmup = "warmup"  # Încălzire
-    rise = "rise"  # Urcare
-    wave = "wave"  # Val
-    free = "free"  # Liber
 
 
 class Mix(Base):
