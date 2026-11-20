@@ -35,7 +35,7 @@ const pending = {
   waveform_preview: null,
   analyzed: false,
 };
-const noJobs = { 'GET /api/jobs/active': () => [] };
+const noJobs = { 'GET /api/jobs/active': () => [], 'GET /api/mixes': () => [] };
 
 afterEach(() => {
   cleanup();

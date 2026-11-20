@@ -122,11 +122,52 @@ export const ro = {
     shortSkipped: 'Fișierele mai scurte de un minut (sample-uri) nu intră în bibliotecă.',
     analysisContinues: 'Tempo-ul și tonul se analizează acum în fundal; le vezi apărând în tabel.',
   },
-  screens: {
-    mixes: {
-      title: 'Mix-uri',
-      subtitle: 'Aici vei construi și ordona seturile tale.',
+  mixes: {
+    title: 'Mix-urile tale',
+    subtitle: 'Alege un mix ca să-l construiești sau începe unul nou.',
+    create: 'Mix nou',
+    createFirst: 'Creează primul mix',
+    defaultName: 'Mix nou',
+    meta: (count: number, minutes: string) =>
+      `${count === 1 ? '1 piesă' : `${count} piese`} · ${minutes}`,
+    bpmRange: (from: string, to: string) => `${from} → ${to} BPM`,
+    updated: (date: string) => `modificat ${date}`,
+    loading: 'Se încarcă mixurile…',
+  },
+  builder: {
+    back: 'Toate mixurile',
+    name: 'Numele mixului',
+    order: 'Ordinea pieselor',
+    dragHint: 'Trage ca să reordonezi',
+    empty: 'Mixul e gol. Adaugă piese din bibliotecă.',
+    add: 'Adaugă',
+    remove: (title: string) => `Scoate „${title}” din mix`,
+    drag: (title: string) => `Mută „${title}”`,
+    delete: 'Șterge mixul',
+    deleteConfirm: (name: string) => `Ștergi „${name}”? Piesele rămân în bibliotecă.`,
+    deleteTitle: 'Șterge mixul',
+    notFound: 'Mixul nu mai există.',
+    addTitle: 'Adaugă piese în mix',
+    addSearch: 'Caută în bibliotecă',
+    addOne: (title: string) => `Adaugă „${title}”`,
+    inMix: 'În mix',
+    noTracks: 'Nicio piesă nu se potrivește.',
+    dnd: {
+      pickedUp: (title: string) => `Ai ridicat „${title}”.`,
+      over: (title: string, position: number) => `„${title}” e acum pe poziția ${position}.`,
+      dropped: (title: string, position: number) => `„${title}” a rămas pe poziția ${position}.`,
+      cancelled: (title: string) => `Mutarea lui „${title}” a fost anulată.`,
+      instructions:
+        'Apasă spațiu ca să ridici piesa, săgețile stânga/dreapta ca s-o muți și spațiu ca s-o lași. Escape anulează.',
     },
+  },
+  addToMix: {
+    add: (name: string) => `Adaugă în „${name}”`,
+    addNew: 'Adaugă într-un mix nou',
+    already: (name: string) => `Deja în „${name}”`,
+    target: 'Mixul în care adaugi',
+  },
+  screens: {
     exports: {
       title: 'Exporturi',
       subtitle: 'Aici vor apărea mixurile exportate, gata de descărcat.',

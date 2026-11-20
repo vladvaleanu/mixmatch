@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from mixmatch.config import settings
-from mixmatch.db.models import Job, LibraryFolder, Track, Waveform
+from mixmatch.db.models import Job, LibraryFolder, Mix, MixItem, Track, Waveform
 from mixmatch.db.session import SessionLocal
 from mixmatch.main import app
 from tests.audio import make_audio
@@ -16,7 +16,7 @@ from tests.audio import make_audio
 def client() -> Iterator[TestClient]:
     with TestClient(app) as test_client:
         with SessionLocal.begin() as session:
-            for model in (Waveform, Track, LibraryFolder, Job):
+            for model in (MixItem, Mix, Waveform, Track, LibraryFolder, Job):
                 session.execute(delete(model))
         yield test_client
 

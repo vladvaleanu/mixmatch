@@ -5,6 +5,14 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Dependențe pasul 6: `@dnd-kit/core` 6, `@dnd-kit/sortable` 10, `@dnd-kit/utilities` 3 (nu `@dnd-kit/react`, încă 0.x) | Drag & drop din plan, cu suport de tastatură și anunțuri pentru cititoarele de ecran |
+| 2026-11-20 | `mix_items`: cheia (mix_id, position), unicitate (mix_id, track_id), `ON DELETE CASCADE` spre mix și spre piesă; `PUT /mixes/{id}/items` rescrie toate pozițiile | O piesă ștearsă de o rescanare dispare și din mixuri; ordinea e mereu 0..n−1 |
+| 2026-11-20 | `energy_shape` implicit `free` („Liber”); `PATCH /mixes/{id}` acceptă deocamdată doar numele (forma vine în pasul 7) | Fără câmpuri fără client |
+| 2026-11-20 | API-ul mixurilor: `GET /mixes` (rezumat: piese, durată, ultima modificare, cele recente primele), `GET /mixes/{id}` (cu piesele în ordine), `POST`, `PATCH`, `DELETE`, `PUT …/items`; erori `mix_not_found`, `duplicate_track`, `unknown_track` | CRUD-ul din plan |
+| 2026-11-20 | Rute: `/mixuri` (lista), `/mixuri/:mixId` (Constructorul) | Rutare deja în react-router |
+| 2026-11-20 | „Adaugă în mix” țintește mixul activ (ultimul deschis sau creat, ținut în `localStorage`), altfel cel mai recent; un selector schimbă ținta; fără mixuri: „Adaugă într-un mix nou” | Un singur click în cazul obișnuit; preferința e locală, a acestui browser |
+| 2026-11-20 | Reordonarea și scoaterea sunt optimiste (UI-ul se schimbă imediat, revine dacă serverul refuză) | Drag-ul nu „sare” înapoi cât așteaptă răspunsul |
+| 2026-11-20 | Piesele se adaugă în Constructor dintr-un dialog cu căutare în bibliotecă (cardul „Adaugă”) | Fără să părăsești mixul |
 | 2026-11-20 | Ton (în `music/compat.py`), după transpunerea lui B: Lin = același ton, ±1 pe aceeași literă, relativul; Bun = diagonala (8A → 9B, 8B → 7A) și ±2 pe aceeași literă; restul = Atenție | Roata Camelot clasică; ±2 („energy boost”) se aude, dar merge |
 | 2026-11-20 | Transpunerea: semitonuri = round(12·log2(viteză)); sub ½ semiton (≈ 2,9 %) tonul rămâne același; un semiton = 7 pași pe roată | Cu sincronizarea stil vinil, ce se aude e tonul la viteza nouă |
 | 2026-11-20 | Energie între A și B: salt ≤ 1 = Lin, 2 = Bun, ≥ 3 = Atenție; fără energie la una din piese, nu contează | Saltul mare de energie se simte pe ringul de dans |

@@ -3,6 +3,13 @@ export function formatBpm(bpm: number): string {
   return Number.isInteger(bpm) ? String(bpm) : bpm.toFixed(1).replace('.', ',');
 }
 
+/** 2580 → „43 min”; 4500 → „1 h 15 min”. */
+export function formatMinutes(seconds: number): string {
+  const minutes = Math.round(seconds / 60);
+  const h = Math.floor(minutes / 60);
+  return h > 0 ? `${h} h ${minutes % 60} min` : `${minutes} min`;
+}
+
 /** 312.4 → „5:12”; 3725 → „1:02:05”. */
 export function formatDuration(seconds: number): string {
   const total = Math.max(0, Math.round(seconds));

@@ -182,6 +182,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mixes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Mixes
+         * @description Mixurile, cele modificate recent primele.
+         */
+        get: operations["list_mixes"];
+        put?: never;
+        /** Create Mix */
+        post: operations["create_mix"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mixes/{mix_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Mix */
+        get: operations["get_mix"];
+        put?: never;
+        post?: never;
+        /** Delete Mix */
+        delete: operations["delete_mix"];
+        options?: never;
+        head?: never;
+        /** Update Mix */
+        patch: operations["update_mix"];
+        trace?: never;
+    };
+    "/api/mixes/{mix_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Mix Items
+         * @description Salvează ordinea completă a pieselor (adăugare, scoatere și reordonare).
+         */
+        put: operations["set_mix_items"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -198,6 +258,11 @@ export interface components {
             /** Job Id */
             job_id: number;
         };
+        /**
+         * EnergyShape
+         * @enum {string}
+         */
+        EnergyShape: "warmup" | "rise" | "wave" | "free";
         /** ErrorBody */
         ErrorBody: {
             error: components["schemas"]["ErrorDetail"];
@@ -255,6 +320,59 @@ export interface components {
             score: number;
             /** Reason */
             reason: string;
+        };
+        /** MixCreate */
+        MixCreate: {
+            /**
+             * Name
+             * @default Mix nou
+             */
+            name: string;
+            /** Track Ids */
+            track_ids?: number[];
+        };
+        /** MixItemsIn */
+        MixItemsIn: {
+            /** Track Ids */
+            track_ids: number[];
+        };
+        /** MixOut */
+        MixOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            energy_shape: components["schemas"]["EnergyShape"];
+            /** Duration S */
+            duration_s: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Tracks */
+            tracks: components["schemas"]["TrackOut"][];
+        };
+        /** MixPatch */
+        MixPatch: {
+            /** Name */
+            name: string;
+        };
+        /** MixSummary */
+        MixSummary: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Track Count */
+            track_count: number;
+            /** Duration S */
+            duration_s: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** TrackOut */
         TrackOut: {
@@ -658,6 +776,225 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_mixes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MixSummary"][];
+                };
+            };
+        };
+    };
+    create_mix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MixCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MixOut"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_mix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MixOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_mix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_mix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MixPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MixOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    set_mix_items: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MixItemsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MixOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };

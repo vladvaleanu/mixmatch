@@ -12,6 +12,7 @@ from sqlalchemy import (
     MetaData,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -123,3 +124,48 @@ class Job(Base):
     progress: Mapped[float] = mapped_column(default=0.0)
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class EnergyShape(StrEnum):
+    warmup = "warmup"  # Încălzire
+    rise = "rise"  # Urcare
+    wave = "wave"  # Val
+    free = "free"  # Liber
+
+
+class Mix(Base):
+    __tablename__ = "mixes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    energy_shape: Mapped[EnergyShape] = mapped_column(
+        Enum(EnergyShape, native_enum=False, length=16), default=EnergyShape.free
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    items: Mapped[list["MixItem"]] = relationship(
+        back_populates="mix",
+        order_by="MixItem.position",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+
+class MixItem(Base):
+    """O piesă pe o poziție în mix. O piesă apare cel mult o dată într-un mix."""
+
+    __tablename__ = "mix_items"
+    __table_args__ = (UniqueConstraint("mix_id", "track_id", name="track_once"),)
+
+    mix_id: Mapped[int] = mapped_column(
+        ForeignKey("mixes.id", ondelete="CASCADE"), primary_key=True
+    )
+    position: Mapped[int] = mapped_column(primary_key=True)
+    # O piesă ștearsă din bibliotecă (rescanare) dispare și din mixuri.
+    track_id: Mapped[int] = mapped_column(ForeignKey("tracks.id", ondelete="CASCADE"), index=True)
+
+    mix: Mapped[Mix] = relationship(back_populates="items")
+    track: Mapped[Track] = relationship()
