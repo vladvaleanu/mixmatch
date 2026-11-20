@@ -345,6 +345,26 @@ export interface paths {
         patch: operations["update_transition"];
         trace?: never;
     };
+    "/api/mixes/{mix_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Mix
+         * @description Pornește randarea mixului (WAV 16-bit/44,1 kHz sau MP3 320 kbps) ca job.
+         */
+        post: operations["export_mix"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -419,6 +439,22 @@ export interface components {
             code: string;
             /** Message */
             message: string;
+        };
+        /** ExportIn */
+        ExportIn: {
+            /**
+             * Format
+             * @default wav
+             * @enum {string}
+             */
+            format?: "wav" | "mp3";
+        };
+        /** ExportStarted */
+        ExportStarted: {
+            /** Job Id */
+            job_id: number;
+            /** Path */
+            path: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -556,6 +592,10 @@ export interface components {
             preview_start_s: number;
             /** Preview End S */
             preview_end_s: number;
+            /** Glide Start S */
+            glide_start_s: number;
+            /** Glide S */
+            glide_s: number;
             /** Automations */
             automations: components["schemas"]["AutomationOut"][];
             /** A Out Auto */
@@ -1485,6 +1525,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TransitionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    export_mix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportStarted"];
                 };
             };
             /** @description Not Found */

@@ -256,6 +256,20 @@ export const ro = {
     reject: 'Renunță',
     working: 'Caut o ordine mai bună…',
   },
+  exportMix: {
+    button: 'Exportă',
+    title: 'Exportă mixul',
+    intro:
+      'Mixul se randează din aceleași planuri ca previzualizarea, cu volumul egalizat și un limiter la final.',
+    format: 'Format',
+    wav: 'WAV · 16-bit, 44,1 kHz (fără pierderi)',
+    mp3: 'MP3 · 320 kbps',
+    start: 'Exportă',
+    rendering: 'Se randează…',
+    progressLabel: 'Progresul exportului',
+    done: 'Gata! Fișierul e aici:',
+    failed: 'Exportul a eșuat:',
+  },
   addToMix: {
     add: (name: string) => `Adaugă în „${name}”`,
     addNew: 'Adaugă într-un mix nou',

@@ -32,7 +32,8 @@ export function clipRanges(plan: Plan): { a: ClipRange; b: ClipRange } {
   return {
     a: { fromS: Math.max(0, aFrom), toS: plan.a_start_s + we, atS: Math.max(0, -aFrom) },
     b: {
-      fromS: plan.b_start_s + bStartT * plan.speed_b,
+      // Max cu 0: rotunjirile pot da un −0,000…, pe care serverul îl refuză.
+      fromS: Math.max(0, plan.b_start_s + bStartT * plan.speed_b),
       toS: plan.b_start_s + we * plan.speed_b,
       atS: bStartT - ws,
     },

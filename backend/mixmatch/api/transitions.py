@@ -1,6 +1,5 @@
 from typing import Literal
 
-import numpy as np
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -10,16 +9,14 @@ from mixmatch.api.deps import SessionDep
 from mixmatch.api.errors import ApiError, responses
 from mixmatch.api.mixes import load_mix
 from mixmatch.api.tracks import TrackOut
-from mixmatch.db.models import BeatGridRow, Mix, Track, Transition, Waveform
+from mixmatch.db.models import Mix, Track, Transition, Waveform
+from mixmatch.mixes.plans import plan_for, settings_for
 from mixmatch.music.compat import Label, Problem, TrackInfo, match
 from mixmatch.music.transition_plan import (
     DEFAULT_LENGTH,
     DEFAULT_STYLE,
     MAX_NUDGE_S,
-    Plan,
-    Side,
     Style,
-    build_plan,
     recommend,
 )
 
@@ -62,6 +59,8 @@ class PlanOut(BaseModel):
     echo_taps: list[EchoTapOut]
     preview_start_s: float  # fereastra de ascultat, în timpul tranziției (negativ = înainte)
     preview_end_s: float
+    glide_start_s: float  # de aici B revine la viteza ei (exportul; după fereastra de ascultat)
+    glide_s: float
     automations: list[AutomationOut]
     a_out_auto: bool  # punctul de ieșire e ales automat
     b_in_auto: bool
@@ -97,22 +96,6 @@ class TransitionPatch(BaseModel):
     )
 
 
-def _side(session: Session, track: Track) -> Side | None:
-    if not track.bpm or track.first_beat_s is None:
-        return None
-    grid = session.get(BeatGridRow, track.id)
-    beats = tuple(float(b) for b in np.frombuffer(grid.beats, dtype="<f4")) if grid else None
-    return Side(
-        beats=beats,
-        bpm=track.bpm,
-        first_beat_s=track.first_beat_s,
-        duration_s=track.duration_s,
-        intro_bars=track.intro_bars,
-        outro_bars=track.outro_bars,
-        loudness_lufs=track.loudness_lufs,
-    )
-
-
 def _pair(mix: Mix, position: int) -> tuple[Track, Track]:
     tracks = [item.track for item in mix.items]
     if not 1 <= position < len(tracks):
@@ -120,28 +103,15 @@ def _pair(mix: Mix, position: int) -> tuple[Track, Track]:
     return tracks[position - 1], tracks[position]
 
 
-def _settings(session: Session, mix: Mix, a: Track, b: Track) -> Transition | None:
-    return session.get(Transition, (mix.id, a.id, b.id))
-
-
 def _out(session: Session, mix: Mix, position: int) -> TransitionOut:
     a, b = _pair(mix, position)
-    side_a, side_b = _side(session, a), _side(session, b)
     info_a, info_b = TrackInfo.of(a), TrackInfo.of(b)
-    if not (side_a and side_b and info_a and info_b):
+    plan = plan_for(session, mix, a, b)
+    if plan is None or info_a is None or info_b is None:
         raise ApiError(
             409, "not_analyzed", "Tranziția se poate planifica după analiza ambelor piese."
         )
-    saved = _settings(session, mix, a, b)
-    plan: Plan = build_plan(
-        side_a,
-        side_b,
-        length_bars=saved.length_bars if saved else DEFAULT_LENGTH,
-        style=saved.style if saved else DEFAULT_STYLE,
-        a_out_s=saved.a_out_s if saved else None,
-        b_in_s=saved.b_in_s if saved else None,
-        b_nudge_s=saved.b_nudge_s if saved else 0.0,
-    )
+    saved = settings_for(session, mix, a, b)
     result = match(info_a, info_b)
     previews = dict(
         session.execute(
@@ -178,6 +148,8 @@ def _out(session: Session, mix: Mix, position: int) -> TransitionOut:
             echo_taps=[EchoTapOut(delay_s=e.delay_s, gain=e.gain) for e in plan.echo_taps],
             preview_start_s=plan.preview_start_s,
             preview_end_s=plan.preview_end_s,
+            glide_start_s=plan.glide_start_s,
+            glide_s=plan.glide_s,
             automations=[
                 AutomationOut(
                     target=auto.target,  # type: ignore[arg-type]
@@ -212,7 +184,7 @@ def update_transition(
     """Lungimea, stilul și punctele de intrare/ieșire (lipite de fraze). Se salvează pe pereche."""
     mix = load_mix(session, mix_id)
     a, b = _pair(mix, position)
-    saved = _settings(session, mix, a, b)
+    saved = settings_for(session, mix, a, b)
     if saved is None:
         saved = Transition(
             mix_id=mix.id,

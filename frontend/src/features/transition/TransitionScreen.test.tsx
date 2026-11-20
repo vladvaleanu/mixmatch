@@ -51,8 +51,10 @@ function transition(plan: object = {}) {
       speed_b: 123 / 124,
       gain_a_db: -2,
       gain_b_db: 1,
-      echo_delay_s: 0.36,
-      echo_feedback: 0.45,
+      bass_shelf_hz: 150,
+      echo_taps: [{ delay_s: 0.36, gain: 1 }],
+      preview_start_s: -7.8,
+      preview_end_s: 39.2,
       automations: [
         {
           target: 'a_volume',
@@ -79,6 +81,8 @@ function transition(plan: object = {}) {
           ],
         },
       ],
+      glide_start_s: 39.2,
+      glide_s: 15.6,
       a_out_auto: true,
       b_in_auto: true,
       ...plan,

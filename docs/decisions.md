@@ -5,6 +5,11 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | După tranziție, B revine lin la viteza ei în 8 bare, începând de la sfârșitul ferestrei de previzualizare (`glide_start_s`, `glide_s` în plan) | Fără revenire, vitezele s-ar aduna de la o piesă la alta, iar etichetele (calculate pe tempo-urile originale) n-ar mai fi corecte; previzualizarea și exportul rămân identice în fereastra comparabilă |
+| 2026-11-20 | Exportul (`export/render.py`) randează în numpy: piesele decodate cu ffmpeg, poziția fiecăreia calculată din viteze (cu revenire), interpolare cubică; basul cu același low-shelf ca Web Audio (filtrul IIR din Essentia), ecoul cu aceleași întârzieri; scris pe bucăți, apoi ffmpeg: `alimiter` la −1 dB, WAV 16-bit sau MP3 320 kbps | Execută exact planurile; nicio dependență nouă; memorie limitată la două piese |
+| 2026-11-20 | Previzualizarea nu are limiter (exportul da) | Limiter-ul doar previne depășirile; auto-gain-ul (−12 LUFS) lasă loc; diferența măsurată fără limiter e sub 0,1 dB |
+| 2026-11-20 | `POST /mixes/{id}/export` (wav sau mp3) pornește un job și întoarce calea finală; numele vine din numele mixului (caractere nepermise → „-”), cu „(2)”, „(3)” dacă fișierul există; mix gol → 409 `empty_mix`, piese neanalizate → 409 `not_analyzed` | Utilizatorul știe de la început unde va fi fișierul |
+| 2026-11-20 | Construcția planurilor din bază stă în `mixes/plans.py` (folosit de editor și de export) | Un singur loc pentru setările salvate + plan |
 | 2026-11-20 | Scorul unei ordini (`compat.pair_value`, `compat.curve_cost`): suma scorurilor tranzițiilor, −100 pentru fiecare „Atenție”, 40 pentru o tranziție cu o piesă neanalizată, minus 8 puncte pe treaptă de abatere de la curbă | Aceleași reguli ca raportul și sugestiile; „Atenție” se evită înaintea oricărui alt câștig |
 | 2026-11-20 | Ordonarea (`mixes/auto_order.py`): greedy de la prima piesă (fixă), apoi căutare locală (mutări și schimburi) cât timp scorul crește; dacă rezultatul nu bate ordinea actuală, propunerea e ordinea actuală | Garantează „mai bun sau egal”; 6 ms pentru 12 piese |
 | 2026-11-20 | `POST /mixes/{id}/auto-order` întoarce propunerea (piese, scoruri, etichetele înainte și după), fără să salveze; „Acceptă” trece prin `PUT …/items` | Previzualizare pe care o accepți sau o refuzi, ca în plan |

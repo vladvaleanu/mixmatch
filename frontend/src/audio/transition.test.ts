@@ -26,6 +26,8 @@ function plan(overrides: Partial<Plan> = {}): Plan {
     ],
     preview_start_s: -8,
     preview_end_s: L + 8,
+    glide_start_s: L + 8,
+    glide_s: 15,
     a_out_auto: true,
     b_in_auto: true,
     automations: [
@@ -111,6 +113,12 @@ describe('clipRanges', () => {
     expect(r.a).toEqual({ fromS: 0, toS: 41, atS: 5 });
     expect(r.b.fromS).toBeCloseTo(0);
     expect(r.b.atS).toBeCloseTo(8 + 15);
+  });
+
+  it('nu cere niciodată un început negativ (rotunjiri)', () => {
+    // −b_start / speed * speed nu dă exact −b_start în virgulă mobilă.
+    const r = clipRanges(plan({ b_start_s: -0.3, speed_b: 0.9830508474576272 }));
+    expect(r.b.fromS).toBeGreaterThanOrEqual(0);
   });
 });
 

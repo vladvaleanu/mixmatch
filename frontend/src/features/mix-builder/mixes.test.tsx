@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -339,6 +339,38 @@ describe('Ordonarea automată', () => {
     fireEvent.click(await screen.findByRole('button', { name: ro.autoOrder.button }));
     expect(await screen.findByText(ro.autoOrder.unchanged)).toBeTruthy();
     expect(screen.queryByRole('button', { name: ro.autoOrder.accept })).toBeNull();
+  });
+});
+
+describe('Exportul', () => {
+  it('pornește exportul în formatul ales și arată unde e fișierul', async () => {
+    let polls = 0;
+    const api = mockApi({
+      'GET /api/mixes/7': () => mix(),
+      'GET /api/mixes/7/report': () => report(),
+      'GET /api/tracks/3/matches': () => [],
+      'POST /api/mixes/7/export': () =>
+        Response.json({ job_id: 9, path: '/Users/tu/Music/mixmatch/Set/Set.mp3' }, { status: 202 }),
+      'GET /api/jobs/9': () => {
+        polls += 1;
+        return polls < 2
+          ? { id: 9, kind: 'export', status: 'running', progress: 0.4, error: null }
+          : { id: 9, kind: 'export', status: 'done', progress: 1, error: null };
+      },
+    });
+    renderBuilder();
+
+    fireEvent.click(await screen.findByRole('button', { name: ro.exportMix.button }));
+    fireEvent.click(screen.getByRole('radio', { name: ro.exportMix.mp3 }));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: ro.exportMix.start }),
+    );
+
+    expect(await screen.findByRole('progressbar')).toBeTruthy();
+    expect(
+      await screen.findByText('/Users/tu/Music/mixmatch/Set/Set.mp3', {}, { timeout: 3000 }),
+    ).toBeTruthy();
+    expect(await body(api, 'POST', '/api/mixes/7/export')).toEqual({ format: 'mp3' });
   });
 });
 

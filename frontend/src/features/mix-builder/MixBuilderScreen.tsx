@@ -36,6 +36,7 @@ import { Segmented } from '../../ui/Segmented';
 import { useActiveMix } from './activeMixStore';
 import { AddTrackDialog } from './AddTrackDialog';
 import { AutoOrderDialog } from './AutoOrderDialog';
+import { ExportDialog } from './ExportDialog';
 import { EnergyCurve } from './EnergyCurve';
 import { CARD_WIDTH, MixTrackCard } from './MixTrackCard';
 import { NextSuggestions } from './NextSuggestions';
@@ -323,6 +324,7 @@ export function MixBuilderScreen() {
   const [adding, setAdding] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const autoOrder = useAutoOrder(mixId);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (mix.data) setActive(mix.data.id); // „Adaugă în mix” din Bibliotecă țintește mixul deschis
@@ -405,6 +407,13 @@ export function MixBuilderScreen() {
               {autoOrder.isPending ? ro.autoOrder.working : ro.autoOrder.button}
             </Button>
             <Button onClick={() => setConfirming(true)}>{ro.builder.delete}</Button>
+            <Button
+              variant="primary"
+              disabled={tracks.length === 0}
+              onClick={() => setExporting(true)}
+            >
+              {ro.exportMix.button}
+            </Button>
           </div>
         </div>
 
@@ -435,6 +444,7 @@ export function MixBuilderScreen() {
             onClose={() => autoOrder.reset()}
           />
         )}
+        {exporting && <ExportDialog mixId={data.id} onClose={() => setExporting(false)} />}
         {confirming && (
           <Dialog title={ro.builder.deleteTitle} onClose={() => setConfirming(false)}>
             <p style={{ margin: 0, color: color.textSoft }}>

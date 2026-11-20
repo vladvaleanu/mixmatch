@@ -13,6 +13,8 @@ Browserul (`frontend/src/audio/`) și ffmpeg (`export/`) execută același plan,
   (`echo_taps`: întârziere, volum), alimentată de A după filtru și înainte de volumul ei, și
   trimisă direct la ieșire (coada rămâne după ce A e oprită);
 - `preview_start_s` … `preview_end_s` e fereastra de ascultat (câteva bare înainte și după);
+- după `glide_start_s` (= sfârșitul ferestrei de previzualizare), B revine lin la viteza ei
+  în `glide_s` secunde, ca într-un mix lung vitezele să nu se adune de la o piesă la alta;
 - `b_nudge_s` mută B mai târziu (pozitiv) sau mai devreme (negativ) față de A, în timpul mixului:
   corecția manuală când beat-urile nu cad împreună. E deja inclusă în `b_start_s`.
 """
@@ -55,6 +57,7 @@ ECHO_TAPS = 6  # repetări (0,45⁶ ≈ 0,8 %: restul nu se mai aude)
 ECHO_BEATS = 0.75  # întârzierea ecoului: trei sferturi de beat
 BASS_SHELF_HZ = 150.0
 PREVIEW_BARS = 4  # cât se aude înainte și după tranziție, la previzualizare
+GLIDE_BARS = 8  # cât îi ia lui B să revină la viteza ei după tranziție
 MIN_LOCAL_BEATS = 8  # sub atâtea beat-uri în fereastră, tempo-ul local nu e de încredere
 MAX_LOCAL_DEVIATION = 0.02  # tempo local cu peste 2 % față de cel global = estimare greșită
 MAX_NUDGE_S = 1.0  # corecția manuală a lui B, în ambele sensuri
@@ -111,6 +114,8 @@ class Plan:
     echo_taps: list[EchoTap]
     preview_start_s: float
     preview_end_s: float
+    glide_start_s: float
+    glide_s: float
     automations: list[Automation]
 
 
@@ -302,5 +307,7 @@ def build_plan(
         echo_taps=echo_taps(a.bpm),
         preview_start_s=round(-PREVIEW_BARS * bar_s(a.bpm), 3),
         preview_end_s=round(length_s + PREVIEW_BARS * bar_s(a.bpm), 3),
+        glide_start_s=round(length_s + PREVIEW_BARS * bar_s(a.bpm), 3),
+        glide_s=round(GLIDE_BARS * bar_s(a.bpm), 3),
         automations=automations,
     )
