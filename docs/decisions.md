@@ -5,6 +5,16 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Energia 1–5 din praguri fixe, calibrate o dată pe biblioteca utilizatorului și scrise în cod; nu se recalculează când biblioteca crește | Ales de utilizator; energia unei piese rămâne stabilă |
+| 2026-11-20 | Auto-gain: analiza (3b) măsoară tăria integrată (LUFS, coloana `loudness_lufs`); planul tranziției dă fiecărui deck un câștig spre ținta de −12 LUFS, limitat la [−12, +6] dB; exportul trece printr-un limiter | Ales de utilizator; piesele de epoci diferite sună la fel de tare, în previzualizare și în export |
+| 2026-11-20 | Pragurile de tempo: Lin ≤ 3 %, Bun ≤ 6 %, peste = Atenție (și pentru jumătate/dublu). Compatibilitatea tonului folosește tonul lui B după accelerarea stil vinil: o abatere ≥ ½ semiton mută tonul pe roată (1 semiton = 7 pași Camelot) | Ales de utilizator; cu sincronizarea stil vinil, tempo-ul schimbă tonul |
+| 2026-11-20 | Push pe GitHub (`origin main`) după commitul fiecărui pas | Ales de utilizator |
+| 2026-11-20 | „Ordonează automat” păstrează prima piesă pe loc | Ales de utilizator; DJ-ul alege cu ce începe |
+| 2026-11-20 | Exporturile merg în `~/Music/mixmatch/<nume mix>/` (audio, tracklist, .cue); WAV 16-bit/44,1 kHz și MP3 320 kbps CBR | Ales de utilizator; fișierele sunt la vedere, lângă muzică |
+| 2026-11-20 | O piesă apare cel mult o dată într-un mix (constrângere unică pe `mix_items`); „Adaugă în mix” e dezactivat pentru piesele deja incluse, iar sugestiile le exclud | Ales de utilizator |
+| 2026-11-20 | Energia se corectează direct în tabel, cu click pe punctele `EnergyDots` (click pe valoarea curentă manuală = revine la automat) | Cel mai scurt drum; panoul din dreapta (pasul 4) va folosi aceeași componentă |
+| 2026-11-20 | Previzualizarea pornește de la început; click pe forma de undă sare în acel punct | Comportamentul obișnuit al playerelor DJ |
+| 2026-11-20 | Tranziția implicită: 16 bare, stilul `eq_swap`; „Alege aplicația pentru mine” alege lungimea și stilul din eticheta tranziției (Lin → 32 bare eq_swap, Bun → 16 bare eq_swap, Atenție → 8 bare echo_out) | Valori sigure pentru house/techno; regulile stau în `music/transition_plan.py` |
 | 2026-11-20 | Dependență pasul 3a: essentia (2.1b6.dev1389, wheel pentru Python 3.12 / arm64; aduce numpy). Licență AGPL, ok pentru uz personal | Analiza de tempo și ton, cum prevede planul |
 | 2026-11-20 | Tempo: `RhythmExtractor2013(method="multifeature")`, valoarea Essentia rotunjită la o zecimală, fără rafinare din beat-uri | Pe 80 de piese: 69 exacte față de Traktor (eroare medie 0,05 BPM); rafinarea din beat-uri a stricat 24 de piese cu breakdown-uri |
 | 2026-11-20 | Ton: `KeyExtractor(profileType="bgate")` | Pe 100 de piese comparate cu Traktor, `bgate` a avut cele mai puține tonuri greșite (16, față de 21 la `edma` și 23 la `edmm`) |

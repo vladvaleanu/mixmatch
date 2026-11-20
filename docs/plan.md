@@ -103,12 +103,12 @@ mixmatch/
 
 | Tabel | Câmpuri principale | Note |
 | --- | --- | --- |
-| `tracks` | id, path, file_hash, title, artist, duration_s, bpm, key_camelot, energy (1–5), energy_manual (1–5/null), first_beat_s, intro_bars, outro_bars, analysis_version, analyzed_at | `file_hash` evită reanaliza; `analysis_version` forțează reanaliza când se schimbă algoritmul |
+| `tracks` | id, path, file_hash, title, artist, duration_s, bpm, key_camelot, energy (1–5), energy_manual (1–5/null), loudness_lufs, first_beat_s, intro_bars, outro_bars, analysis_version, analyzed_at | `file_hash` evită reanaliza; `analysis_version` forțează reanaliza când se schimbă algoritmul |
 | `waveforms` | track_id, peaks (blob, ~1000 puncte), peaks_hi (blob, ~8000 puncte) | Două rezoluții: listă și editor |
 | `library_folders` | id, path, last_scan_at | Folderele urmărite |
 | `collections`, `collection_tracks` | id, name · collection_id, track_id | Colecțiile din bara laterală (pasul 11) |
 | `mixes` | id, name, energy_shape, created_at, updated_at | `energy_shape`: warmup, rise, wave, free |
-| `mix_items` | mix_id, position, track_id | Ordinea pieselor |
+| `mix_items` | mix_id, position, track_id | Ordinea pieselor; o piesă cel mult o dată pe mix |
 | `transitions` | mix_id, from_track_id, to_track_id, length_bars, style, a_out_s, b_in_s | Legată de perechea A → B, nu de poziție: dacă perechea revine după o reordonare, setările revin. Dacă lipsește, se folosesc valori implicite calculate |
 | `jobs` | id, kind, status, progress, error, created_at | Scanare, analiză, export |
 | `exports` | id, mix_id, job_id, format, path, duration_s, created_at | Istoricul exporturilor pentru ecranul Exporturi (pasul 10b) |
@@ -146,8 +146,11 @@ sunt. Drag & drop-ul cu upload vine în pasul 11.
 - **Sincronizarea tempo-ului în tranziție**: stil vinil. Piesa B se redă cu raportul
   `bpm_A / bpm_B` (viteza și tonul se schimbă împreună), fără time-stretch. Raportul face parte
   din planul tranziției; browserul îl aplică prin `playbackRate`, ffmpeg prin `asetrate` + `aresample`.
-- **Etichete tranziții**: Lin / Bun / Atenție. Pragurile exacte se stabilesc în pasul 5 și
-  se trec în `docs/decisions.md`.
+- **Etichete tranziții**: Lin / Bun / Atenție. Tempo: Lin ≤ 3 %, Bun ≤ 6 %, peste = Atenție.
+  Tonul se judecă după accelerarea lui B (stil vinil): ≥ ½ semiton mută tonul pe roată.
+  Pragurile complete (ton + energie) se stabilesc în pasul 5 și se trec în `docs/decisions.md`.
+- **Auto-gain**: fiecare deck primește un câștig spre −12 LUFS (limitat la [−12, +6] dB), parte
+  din planul tranziției.
 - **Motivul în cuvinte**: fiecare scor vine cu un text scurt, de exemplu „8A → 9A · −1 BPM”.
 
 ## 4. Rutina fiecărui pas
@@ -210,7 +213,8 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 ### Pasul 3b — Analiza: energie, formă de undă, intro/outro
 - **Scop**: energia 1–5, vârfurile formei de undă, lungimea intro-ului și a outro-ului.
 - **Citește înainte**: `analysis/`, nota pasului 3a.
-- **Livrează**: `analysis/energy.py`, `analysis/waveform.py`, tabelul `waveforms`,
+- **Livrează**: `analysis/energy.py` (energia din praguri fixe, calibrate pe biblioteca utilizatorului;
+  tăria în LUFS), `analysis/waveform.py`, tabelul `waveforms`, `analysis_version` = 2,
   `GET /tracks/{id}/waveform`, `PATCH /tracks/{id}` (energy_manual); `EnergyDots` și `Waveform`
   în `ui/`; corectarea manuală a energiei în UI.
 - **Gata când**: tabelul arată ca macheta Biblioteca, iar energia corectată de mână are prioritate.
@@ -267,12 +271,12 @@ Pașii 3, 8 și 10 se fac în două prompturi (a/b).
 - **Scop**: butonul „Ordonează automat”.
 - **Citește înainte**: `music/compat.py`, `mixes/report.py`.
 - **Livrează**: `mixes/auto_order.py` (același scor ca raportul, plus abaterea de la curba de
-  energie; greedy + căutare locală); `POST /mixes/{id}/auto-order`; o previzualizare în UI pe
+  energie; greedy + căutare locală; prima piesă rămâne pe loc); `POST /mixes/{id}/auto-order`; o previzualizare în UI pe
   care o accepți sau o refuzi.
 - **Gata când**: ordinea propusă are un scor total mai bun sau egal cu ordinea ta.
 
 ### Pasul 10a — Exportul: randarea
-- **Scop**: mixul ca fișier WAV/MP3.
+- **Scop**: mixul ca fișier WAV (16-bit/44,1 kHz) sau MP3 (320 kbps), în `~/Music/mixmatch/<mix>/`.
 - **Citește înainte**: `music/transition_plan.py`, `jobs.py`, `audio/engine.ts`.
 - **Livrează**: `export/render.py`: ffmpeg execută aceleași planuri (filtre volume, equalizer,
   aecho, sincronizare tempo stil vinil cu asetrate + aresample); `POST /mixes/{id}/export` ca job.
