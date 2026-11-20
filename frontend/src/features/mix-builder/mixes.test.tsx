@@ -227,15 +227,20 @@ describe('Raportul mixului', () => {
     });
     renderBuilder();
 
-    expect(await screen.findByRole('alert')).toHaveProperty(
-      'textContent',
+    expect((await screen.findByRole('alert')).textContent).toContain(
       'Între „Beta” și „Gama” tonalitățile se ciocnesc.',
     );
-    const notes = screen.getAllByRole('note').map((n) => n.getAttribute('aria-label'));
+    const notes = screen
+      .getAllByRole('link')
+      .map((n) => n.getAttribute('aria-label'))
+      .filter((label) => label?.includes('→'));
     expect(notes).toEqual([
       ro.report.transition('Alfa', 'Beta', ro.transition.smooth, '8A → 8A · +1 BPM'),
       ro.report.transition('Beta', 'Gama', ro.transition.caution, '8A → 3B'),
     ]);
+    expect(screen.getByRole('link', { name: ro.report.fix }).getAttribute('href')).toBe(
+      '/mixuri/7/tranzitii/2',
+    );
   });
 
   it('schimbă forma setului', async () => {

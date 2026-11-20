@@ -5,6 +5,16 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-20 | Planul tranziției (`music/transition_plan.py`): timpii în secunde de la începutul tranziției; A pornește de la `a_start_s`, B de la `b_start_s` (poate fi negativ = B încă tace) la viteza `speed_b`; automatizări liniare pentru `a_volume`, `b_volume` (0–1), `a_bass`, `b_bass` (dB), `a_echo` (0–1); două puncte cu același t = salt | O singură descriere, executată de browser (8b) și de ffmpeg (10a) |
+| 2026-11-20 | Stilurile: Schimb de bas = B crește pe prima jumătate, basurile se schimbă la mijloc (−26 dB), A scade pe a doua; Crossfade = putere constantă (cos/sin); Ecou = A cu ecou crescător pe prima jumătate, tăiată la mijloc, coada ecoului rămâne, B intră la mijloc; Tăietură = schimbare la final | Comportamentul clasic al fiecărui stil |
+| 2026-11-20 | Punctele implicite: ieșirea din A la începutul outro-ului (sau `lungime` bare înainte de final, dacă outro-ul e mai scurt), rotunjită în jos la frază; intrarea în B la primul beat. Punctele alese de mână se lipesc de cea mai apropiată frază (8 bare) | Pe o piesă reală, ieșirea implicită a căzut exact unde scade forma de undă a lui A |
+| 2026-11-20 | Lungimea cerută scade la cea mai mare variantă (8/16/32/64) care încape în ce a rămas din A și din B | Fără tranziții care trec de finalul unei piese |
+| 2026-11-20 | Auto-gain în plan: `gain_*_db` = −12 LUFS − tăria piesei, limitat la [−12, +6] dB; ecoul: întârziere ¾ de beat al lui A, feedback 0,45 | Decizia de auto-gain, aplicată în plan |
+| 2026-11-20 | Tabelul `transitions` are cheia (mix_id, from_track_id, to_track_id); rând lipsă = 16 bare, schimb de bas, puncte automate; punctele salvate sunt cele deja lipite de frază | Setările urmează perechea, cum s-a decis |
+| 2026-11-20 | API: `GET /mixes/{id}/transitions/{position}/plan` (perechea, etichetele pe componente, planul) și `PATCH …/transitions/{position}` (`length_bars`, `style`, `a_out_s`, `b_in_s`, `reset_points`, `auto`); 409 `not_analyzed` dacă lipsește analiza | `position` = poziția lui B, ca în raport |
+| 2026-11-20 | Schema din raport se numește `ReportTransitionOut`; `make types` folosește `--default-non-nullable false` (câmpurile cu valoare implicită rămân opționale în cereri) | Două scheme cu același nume primeau prefixul modulului; `reset_points`/`auto` apăreau obligatorii |
+| 2026-11-20 | Ecranul: fereastra = 4 × lungimea tranziției (A pe ~80 %, suprapunerea de la ~55 %, ca în machetă); punctele se mută cu câte o frază (◀ ▶), „Puncte automate” le resetează | Fără drag pe forma de undă în MVP; aceleași rezultate, mai simplu |
+| 2026-11-20 | Token nou: `accentTint` (`rgba(198, 243, 107, 0.07)`), fundalul zonei de suprapunere | Din machetă |
 | 2026-11-20 | Curbele dorite (`music/energy_curve.py`), pe t = 0…1: Încălzire 1,5 → 3,5; Urcare 2 → 5; Val 2,5 + 1,5·t + sin(4πt) (două valuri, urcând); Liber = fără curbă | Forme simple și previzibile; aceleași pentru raport, sugestii și ordonarea automată |
 | 2026-11-20 | `EnergyShape` stă în `music/energy_curve.py`; modelul `Mix` îl importă de acolo | Regulile muzicale nu depind de baza de date |
 | 2026-11-20 | `compat.match` spune și cauza unei etichete „Atenție” (`problem`): întâi tempo-ul, apoi tonul, apoi energia | La +28 % tonul se strică din cauza accelerării; problema reală e tempo-ul (găsit pe un mix real) |

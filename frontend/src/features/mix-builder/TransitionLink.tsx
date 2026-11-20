@@ -1,8 +1,10 @@
+import { Link } from 'react-router-dom';
+
 import type { Schemas } from '../../api/client';
 import { ro } from '../../i18n/ro';
 import { color, fontSize, radius, space } from '../../theme/tokens';
 
-type Transition = Schemas['TransitionOut'];
+type Transition = Schemas['ReportTransitionOut'];
 
 const look = {
   smooth: {
@@ -18,15 +20,19 @@ const look = {
 
 export const TRANSITION_WIDTH = 76;
 
-/** Eticheta dintre două carduri: formă + culoare + text; motivul la hover și pentru cititoare. */
+/** Eticheta dintre două carduri: formă + culoare + text; motivul la hover și pentru cititoare.
+ *  Click deschide editorul tranziției. */
 export function TransitionLink({
   transition,
   fromTitle,
   toTitle,
+  to,
 }: {
   transition: Transition | undefined;
   fromTitle: string;
   toTitle: string;
+  /** Adresa editorului acestei tranziții. */
+  to: string;
 }) {
   const box = {
     width: TRANSITION_WIDTH,
@@ -54,8 +60,8 @@ export function TransitionLink({
   const l = look[transition.label];
   const text = ro.transition[transition.label];
   return (
-    <span
-      role="note"
+    <Link
+      to={to}
       title={transition.reason ?? undefined}
       aria-label={ro.report.transition(fromTitle, toTitle, text, transition.reason ?? '')}
       style={{
@@ -67,6 +73,7 @@ export function TransitionLink({
         alignItems: 'center',
         justifyContent: 'center',
         gap: space[8],
+        textDecoration: 'none',
       }}
     >
       <span
@@ -80,6 +87,6 @@ export function TransitionLink({
         }}
       />
       <span style={{ fontSize: fontSize.label, fontWeight: 600 }}>{text}</span>
-    </span>
+    </Link>
   );
 }

@@ -19,6 +19,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from mixmatch.music.energy_curve import EnergyShape
+from mixmatch.music.transition_plan import Style
 
 
 def utcnow() -> datetime:
@@ -164,3 +165,27 @@ class MixItem(Base):
 
     mix: Mapped[Mix] = relationship(back_populates="items")
     track: Mapped[Track] = relationship()
+
+
+class Transition(Base):
+    """Setările unei tranziții A → B dintr-un mix, legate de pereche (nu de poziție).
+
+    Dacă A și B ajung din nou una după alta după o reordonare, setările revin. Rând lipsă =
+    valorile implicite. `a_out_s` / `b_in_s` null = puncte alese automat.
+    """
+
+    __tablename__ = "transitions"
+
+    mix_id: Mapped[int] = mapped_column(
+        ForeignKey("mixes.id", ondelete="CASCADE"), primary_key=True
+    )
+    from_track_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True
+    )
+    to_track_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks.id", ondelete="CASCADE"), primary_key=True
+    )
+    length_bars: Mapped[int]
+    style: Mapped[Style] = mapped_column(Enum(Style, native_enum=False, length=16))
+    a_out_s: Mapped[float | None]
+    b_in_s: Mapped[float | None]

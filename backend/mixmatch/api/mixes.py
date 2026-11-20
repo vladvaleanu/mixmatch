@@ -51,7 +51,7 @@ class MixItemsIn(BaseModel):
     track_ids: list[int]  # ordinea nouă, completă
 
 
-def _load(session: Session, mix_id: int) -> Mix:
+def load_mix(session: Session, mix_id: int) -> Mix:
     mix = session.scalar(
         select(Mix)
         .where(Mix.id == mix_id)
@@ -129,30 +129,30 @@ def create_mix(body: MixCreate, session: SessionDep) -> MixOut:
     session.flush()
     _set_items(session, mix, body.track_ids)
     session.commit()
-    return _out(session, _load(session, mix.id))
+    return _out(session, load_mix(session, mix.id))
 
 
 @router.get("/mixes/{mix_id}", operation_id="get_mix", responses=responses(404))
 def get_mix(mix_id: int, session: SessionDep) -> MixOut:
-    return _out(session, _load(session, mix_id))
+    return _out(session, load_mix(session, mix_id))
 
 
 @router.patch("/mixes/{mix_id}", operation_id="update_mix", responses=responses(404, 422))
 def update_mix(mix_id: int, body: MixPatch, session: SessionDep) -> MixOut:
-    mix = _load(session, mix_id)
+    mix = load_mix(session, mix_id)
     if body.name is not None:
         mix.name = body.name
     if body.energy_shape is not None:
         mix.energy_shape = body.energy_shape
     session.commit()
-    return _out(session, _load(session, mix_id))
+    return _out(session, load_mix(session, mix_id))
 
 
 @router.delete(
     "/mixes/{mix_id}", status_code=204, operation_id="delete_mix", responses=responses(404)
 )
 def delete_mix(mix_id: int, session: SessionDep) -> Response:
-    session.delete(_load(session, mix_id))
+    session.delete(load_mix(session, mix_id))
     session.commit()
     return Response(status_code=204)
 
@@ -160,13 +160,13 @@ def delete_mix(mix_id: int, session: SessionDep) -> Response:
 @router.put("/mixes/{mix_id}/items", operation_id="set_mix_items", responses=responses(404, 422))
 def set_mix_items(mix_id: int, body: MixItemsIn, session: SessionDep) -> MixOut:
     """Salvează ordinea completă a pieselor (adăugare, scoatere și reordonare)."""
-    mix = _load(session, mix_id)
+    mix = load_mix(session, mix_id)
     _set_items(session, mix, body.track_ids)
     session.commit()
-    return _out(session, _load(session, mix_id))
+    return _out(session, load_mix(session, mix_id))
 
 
-class TransitionOut(BaseModel):
+class ReportTransitionOut(BaseModel):
     position: int  # poziția piesei B (de la 1); tranziția e între pozițiile position−1 și position
     from_track_id: int
     to_track_id: int
@@ -191,7 +191,7 @@ class ReportOut(BaseModel):
     mix_id: int
     track_ids: list[int]  # ordinea pentru care e calculat raportul
     energy_shape: EnergyShape
-    transitions: list[TransitionOut]
+    transitions: list[ReportTransitionOut]
     energy: list[EnergyPointOut]
     next_target_energy: float | None  # pentru sugestiile „Ce urmează după …”
     warnings: list[WarningOut]
@@ -200,7 +200,7 @@ class ReportOut(BaseModel):
 @router.get("/mixes/{mix_id}/report", operation_id="get_mix_report", responses=responses(404))
 def get_mix_report(mix_id: int, session: SessionDep) -> ReportOut:
     """Etichetele tranzițiilor, curba de energie (dorită și reală) și avertismentele."""
-    mix = _load(session, mix_id)
+    mix = load_mix(session, mix_id)
     tracks = [item.track for item in mix.items]
     report = build_report(tracks, mix.energy_shape)
     return ReportOut(
@@ -208,7 +208,7 @@ def get_mix_report(mix_id: int, session: SessionDep) -> ReportOut:
         track_ids=[t.id for t in tracks],
         energy_shape=mix.energy_shape,
         transitions=[
-            TransitionOut(
+            ReportTransitionOut(
                 position=t.position,
                 from_track_id=t.from_track_id,
                 to_track_id=t.to_track_id,

@@ -6,6 +6,7 @@ import { LibraryScreen } from './features/library/LibraryScreen';
 import { LibrarySearch } from './features/library/LibrarySearch';
 import { MixBuilderScreen } from './features/mix-builder/MixBuilderScreen';
 import { MixesScreen } from './features/mix-builder/MixesScreen';
+import { TransitionScreen } from './features/transition/TransitionScreen';
 import { Toast } from './ui/Toast';
 import { TopBar } from './ui/TopBar';
 
@@ -19,6 +20,7 @@ export function App() {
           <Route path="/biblioteca" element={<LibraryScreen />} />
           <Route path="/mixuri" element={<MixesScreen />} />
           <Route path="/mixuri/:mixId" element={<MixBuilderScreen />} />
+          <Route path="/mixuri/:mixId/tranzitii/:position" element={<TransitionScreen />} />
           <Route path="/exporturi" element={<ExportsScreen />} />
           <Route path="*" element={<Navigate to="/biblioteca" replace />} />
         </Routes>

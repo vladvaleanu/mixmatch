@@ -9,7 +9,7 @@
     "lint": "tsc -b && eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "types": "openapi-typescript ../backend/openapi.json -o src/api/schema.d.ts"
+    "types": "openapi-typescript ../backend/openapi.json --default-non-nullable false -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

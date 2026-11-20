@@ -25,6 +25,7 @@ export const color = {
   warnSoftBg: '#2A2418',
   warnSoftText: '#FFE2A8',
   overlay: 'rgba(17, 18, 20, 0.72)',
+  accentTint: 'rgba(198, 243, 107, 0.07)',
 } as const;
 
 export const font = {

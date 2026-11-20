@@ -127,7 +127,7 @@ function CurveCard({ mix, report }: { mix: Mix; report: Report | undefined }) {
 }
 
 /** Avertismentele raportului (tranzițiile „Atenție”), cu explicația venită de la server. */
-function Warnings({ report }: { report: Report }) {
+function Warnings({ mixId, report }: { mixId: number; report: Report }) {
   if (report.warnings.length === 0) return null;
   return (
     <section
@@ -143,6 +143,7 @@ function Warnings({ report }: { report: Report }) {
             background: color.warnSoftBg,
             padding: `${space[16]}px ${space[18]}px`,
             display: 'flex',
+            flexWrap: 'wrap',
             alignItems: 'center',
             gap: space[14],
           }}
@@ -162,7 +163,22 @@ function Warnings({ report }: { report: Report }) {
             <path d="M12 3l9.5 17h-19z" />
             <path d="M12 10v4M12 17.5v.01" />
           </svg>
-          <p style={{ margin: 0, color: color.warnSoftText, lineHeight: 1.5 }}>{warning.message}</p>
+          <p style={{ margin: 0, flex: '1 1 320px', color: color.warnSoftText, lineHeight: 1.5 }}>
+            {warning.message}
+          </p>
+          <Link
+            to={`/mixuri/${mixId}/tranzitii/${warning.position}`}
+            style={{
+              padding: `${space[10]}px ${space[14]}px`,
+              borderRadius: radius.buttonSm,
+              background: color.surface3,
+              color: color.warnSoftText,
+              textDecoration: 'none',
+              fontWeight: 500,
+            }}
+          >
+            {ro.report.fix}
+          </Link>
         </div>
       ))}
     </section>
@@ -170,6 +186,7 @@ function Warnings({ report }: { report: Report }) {
 }
 
 type OrderProps = {
+  mixId: number;
   tracks: Track[];
   report: Report | undefined;
   onChange: (tracks: Track[]) => void;
@@ -177,7 +194,7 @@ type OrderProps = {
 };
 
 /** „Ordinea pieselor”: cardurile sortabile, cu eticheta tranziției între ele. */
-function TrackOrder({ tracks, report, onChange, onAdd }: OrderProps) {
+function TrackOrder({ mixId, tracks, report, onChange, onAdd }: OrderProps) {
   const [dragging, setDragging] = useState(false);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -255,6 +272,7 @@ function TrackOrder({ tracks, report, onChange, onAdd }: OrderProps) {
                         transition={dragging ? undefined : report?.transitions[i - 1]}
                         fromTitle={tracks[i - 1]?.title ?? ''}
                         toTitle={track.title}
+                        to={`/mixuri/${mixId}/tranzitii/${i}`}
                       />
                     ) : undefined
                   }
@@ -367,12 +385,13 @@ export function MixBuilderScreen() {
 
         <CurveCard mix={data} report={current ?? report.data} />
         <TrackOrder
+          mixId={data.id}
           tracks={tracks}
           report={current}
           onChange={(next) => setItems.mutate(next)}
           onAdd={() => setAdding(true)}
         />
-        {current && <Warnings report={current} />}
+        {current && <Warnings mixId={data.id} report={current} />}
 
         {adding && (
           <AddTrackDialog

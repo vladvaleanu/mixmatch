@@ -97,6 +97,9 @@ class Match:
     # Ce face tranziția „Atenție”: întâi tempo-ul (de el depinde și tonul după sincronizare),
     # apoi tonul, apoi energia.
     problem: Problem | None
+    key_label: Label  # tonul după sincronizare
+    tempo_label: Label
+    energy_label: Label | None  # None dacă una din piese nu are energie
 
 
 @dataclass(frozen=True)
@@ -104,6 +107,11 @@ class _Tempo:
     speed: float
     diff_pct: float
     multiple: float
+
+
+def sync_speed(a_bpm: float, b_bpm: float) -> float:
+    """Viteza cu care se redă B ca să bată cu A (stil vinil, cu jumătate/dublu)."""
+    return _tempo(a_bpm, b_bpm).speed
 
 
 def _tempo(a_bpm: float, b_bpm: float) -> _Tempo:
@@ -192,4 +200,7 @@ def match(a: TrackInfo, b: TrackInfo) -> Match:
         key_after_sync=key_after,
         tempo_diff_pct=tempo.diff_pct,
         problem=problem,
+        key_label=parts[Problem.key],
+        tempo_label=parts[Problem.tempo],
+        energy_label=parts.get(Problem.energy),
     )

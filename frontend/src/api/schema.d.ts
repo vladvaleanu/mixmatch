@@ -265,6 +265,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mixes/{mix_id}/transitions/{position}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Transition Plan
+         * @description Planul tranziției dintre piesele de pe pozițiile `position − 1` și `position`.
+         */
+        get: operations["get_transition_plan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mixes/{mix_id}/transitions/{position}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Transition
+         * @description Lungimea, stilul și punctele de intrare/ieșire (lipite de fraze). Se salvează pe pereche.
+         */
+        patch: operations["update_transition"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -280,6 +320,16 @@ export interface components {
             folder_id: number;
             /** Job Id */
             job_id: number;
+        };
+        /** AutomationOut */
+        AutomationOut: {
+            /**
+             * Target
+             * @enum {string}
+             */
+            target: "a_volume" | "b_volume" | "a_bass" | "b_bass" | "a_echo";
+            /** Points */
+            points: components["schemas"]["PointOut"][];
         };
         /** EnergyPointOut */
         EnergyPointOut: {
@@ -359,7 +409,7 @@ export interface components {
              * Name
              * @default Mix nou
              */
-            name: string;
+            name?: string;
             /** Track Ids */
             track_ids?: number[];
         };
@@ -408,6 +458,49 @@ export interface components {
             updated_at: string;
         };
         /**
+         * PlanOut
+         * @description Planul de automatizări (vezi `music/transition_plan.py`): timpii sunt de la începutul
+         *     tranziției; volumul 0–1, basul în dB, ecoul 0–1.
+         */
+        PlanOut: {
+            style: components["schemas"]["Style"];
+            /** Length Bars */
+            length_bars: number;
+            /** Length S */
+            length_s: number;
+            /** A Out S */
+            a_out_s: number;
+            /** B In S */
+            b_in_s: number;
+            /** A Start S */
+            a_start_s: number;
+            /** B Start S */
+            b_start_s: number;
+            /** Speed B */
+            speed_b: number;
+            /** Gain A Db */
+            gain_a_db: number;
+            /** Gain B Db */
+            gain_b_db: number;
+            /** Echo Delay S */
+            echo_delay_s: number;
+            /** Echo Feedback */
+            echo_feedback: number;
+            /** Automations */
+            automations: components["schemas"]["AutomationOut"][];
+            /** A Out Auto */
+            a_out_auto: boolean;
+            /** B In Auto */
+            b_in_auto: boolean;
+        };
+        /** PointOut */
+        PointOut: {
+            /** T S */
+            t_s: number;
+            /** Value */
+            value: number;
+        };
+        /**
          * Problem
          * @enum {string}
          */
@@ -420,7 +513,7 @@ export interface components {
             track_ids: number[];
             energy_shape: components["schemas"]["EnergyShape"];
             /** Transitions */
-            transitions: components["schemas"]["TransitionOut"][];
+            transitions: components["schemas"]["ReportTransitionOut"][];
             /** Energy */
             energy: components["schemas"]["EnergyPointOut"][];
             /** Next Target Energy */
@@ -428,6 +521,24 @@ export interface components {
             /** Warnings */
             warnings: components["schemas"]["WarningOut"][];
         };
+        /** ReportTransitionOut */
+        ReportTransitionOut: {
+            /** Position */
+            position: number;
+            /** From Track Id */
+            from_track_id: number;
+            /** To Track Id */
+            to_track_id: number;
+            label: components["schemas"]["Label"] | null;
+            /** Reason */
+            reason: string | null;
+            problem: components["schemas"]["Problem"] | null;
+        };
+        /**
+         * Style
+         * @enum {string}
+         */
+        Style: "eq_swap" | "crossfade" | "echo_out" | "cut";
         /** TrackOut */
         TrackOut: {
             /** Id */
@@ -464,16 +575,46 @@ export interface components {
         };
         /** TransitionOut */
         TransitionOut: {
+            /** Mix Id */
+            mix_id: number;
+            /** Mix Name */
+            mix_name: string;
             /** Position */
             position: number;
-            /** From Track Id */
-            from_track_id: number;
-            /** To Track Id */
-            to_track_id: number;
-            label: components["schemas"]["Label"] | null;
+            /** Track Count */
+            track_count: number;
+            from_track: components["schemas"]["TrackOut"];
+            to_track: components["schemas"]["TrackOut"];
+            label: components["schemas"]["Label"];
             /** Reason */
-            reason: string | null;
+            reason: string;
             problem: components["schemas"]["Problem"] | null;
+            key_label: components["schemas"]["Label"];
+            tempo_label: components["schemas"]["Label"];
+            energy_label: components["schemas"]["Label"] | null;
+            /** Key After Sync */
+            key_after_sync: string;
+            plan: components["schemas"]["PlanOut"];
+        };
+        /** TransitionPatch */
+        TransitionPatch: {
+            /** Length Bars */
+            length_bars?: (8 | 16 | 32 | 64) | null;
+            style?: components["schemas"]["Style"] | null;
+            /** A Out S */
+            a_out_s?: number | null;
+            /** B In S */
+            b_in_s?: number | null;
+            /**
+             * Reset Points
+             * @default false
+             */
+            reset_points?: boolean;
+            /**
+             * Auto
+             * @default false
+             */
+            auto?: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -1112,6 +1253,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_transition_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+                position: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransitionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_transition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mix_id: number;
+                position: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransitionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransitionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };

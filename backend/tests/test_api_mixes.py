@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
-from mixmatch.db.models import Job, LibraryFolder, Mix, MixItem, Track, Waveform
+from mixmatch.db.models import Job, LibraryFolder, Mix, MixItem, Track, Transition, Waveform
 from mixmatch.db.session import SessionLocal
 from mixmatch.main import app
 
@@ -13,7 +13,7 @@ from mixmatch.main import app
 def client() -> Iterator[TestClient]:
     with TestClient(app) as test_client:
         with SessionLocal.begin() as session:
-            for model in (MixItem, Mix, Waveform, Track, LibraryFolder, Job):
+            for model in (Transition, MixItem, Mix, Waveform, Track, LibraryFolder, Job):
                 session.execute(delete(model))
         yield test_client
 
