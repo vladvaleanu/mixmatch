@@ -14,9 +14,9 @@ frontend/dist/
 *.db
 *.sqlite
 *.sqlite3
-data/
-exports/
-test-tracks/
+/data/
+/exports/
+/test-tracks/
 
 # Editor / OS
 .vscode/*
@@ -27,3 +27,6 @@ test-tracks/
 # Env
 .env
 .env.*
+
+# Generat de make types
+backend/openapi.json
