@@ -1,16 +1,43 @@
 # mixmatch
 
 Aplicație web locală pentru construit mixuri DJ din piesele tale: analiză automată
-(tempo, ton, energie), sugestii de piese compatibile, ordonare după o curbă de energie,
-editor de tranziții și export.
+(tempo, ton, energie, grila de beat-uri), sugestii de piese compatibile, ordonare după o curbă
+de energie, editor de tranziții cu ascultare și export (WAV/MP3, tracklist, .cue).
 
-Stadiu: pasul 0 (scheletul) gata. Planul complet e în `docs/plan.md`, progresul în `docs/steps/`.
+## Stadiu (2026-11-21)
+- Pașii 0–11 din `docs/plan.md` sunt implementați; fiecare are nota lui în `docs/steps/`, iar
+  deciziile sunt în `docs/decisions.md`.
+- **Deschis:** criteriul pasului 8c (grila de beat-uri) cere confirmarea utilizatorului prin
+  ascultare: cele 8 tranziții din mixul „Test beatmatch — ascultă tranzițiile” — care sunt pe beat
+  fără corecție. Detalii în `docs/steps/08c-grila-de-beaturi.md`.
+- **Opțional, în afara planului:** „Ascultă mixul” (redarea întregului mix în browser).
+- Incidentul de după pasul 11 (migrarea 0008 a șters date în cascadă) e descris și reparat în
+  `docs/steps/11-finisaje.md`.
 
-Pornire: `make setup` (o dată), apoi `make dev` → http://localhost:5173.
+## Pornire
+Cerințe: Python ≥ 3.12, Node ≥ 20, ffmpeg (cu libmp3lame), git.
+
+```
+make setup   # o dată: mediul Python și pachetele Node
+make dev     # backend pe 8000, interfața pe http://localhost:5173
+make lint && make test && make types
+```
+
+## Pe un calculator nou
+Codul și documentația sunt în git; **datele nu**:
+- `data/` (baza SQLite: biblioteca analizată, mixurile, tranzițiile, exporturile) e locală. Pe alt
+  calculator pornești cu o bibliotecă goală: adaugi folderele cu muzică (căile sunt altele) și analiza
+  rulează din nou. Mixurile se refac de mână. Poți copia `data/mixmatch.db` doar dacă muzica e la
+  aceleași căi pe noul calculator.
+- Exporturile se scriu în `~/Music/mixmatch/` (`MIXMATCH_EXPORT_DIR`), importurile prin drag & drop
+  în `~/Music/mixmatch/Importate` (`MIXMATCH_UPLOAD_DIR`).
+- Uneltele de evaluare din `backend/tools/` folosesc colecția Traktor (`collection.nml`) ca referință;
+  fără Traktor, restul aplicației merge normal.
 
 ## Pentru o sesiune nouă de Claude Code
 Primul mesaj:
 
-> Citește CLAUDE.md și tot din docs/, apoi rezumă-mi în câteva rânduri scopul, arhitectura și unde am rămas. După aceea continuă cu pasul 0.
+> Citește CLAUDE.md, README.md și tot din docs/ (plan, decizii, design, toate notele de pas), apoi
+> rezumă-mi scopul, arhitectura, ce e gata, ce e deschis și unde am rămas. Nu schimba nimic încă.
 
-La pașii următori: „continuă cu pasul X”.
+După aceea: „continuă cu …” (de exemplu confirmarea pasului 8c sau o funcție nouă).
