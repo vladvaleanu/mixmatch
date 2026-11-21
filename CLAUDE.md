@@ -1,3 +1,10 @@
+<!-- MIGRARE TEMPORARĂ -->
+> **MIGRARE TEMPORARĂ — citește întâi `docs/HANDOFF.md` și urmează-i instrucțiunile.**
+> Proiectul a fost mutat pe alt calculator; handoff-ul conține contextul conversației anterioare.
+> După ce utilizatorul confirmă migrarea, șterge acest bloc (cu marcajele) și `docs/HANDOFF.md`
+> (vezi „Pasul 4” din handoff).
+<!-- /MIGRARE TEMPORARĂ -->
+
 # mixmatch — reguli de lucru
 
 Aplicație web locală pentru construit mixuri DJ din piesele proprii. Backend Python
