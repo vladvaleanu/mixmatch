@@ -27,6 +27,10 @@ def _default_exports_dir() -> Path:
     return Path(os.environ.get("MIXMATCH_EXPORT_DIR", Path.home() / "Music" / "mixmatch"))
 
 
+def _default_frontend_dir() -> Path:
+    return Path(os.environ.get("MIXMATCH_FRONTEND_DIR", REPO_DIR / "frontend" / "dist"))
+
+
 @dataclass(frozen=True)
 class Settings:
     version: str = APP_VERSION
@@ -35,6 +39,8 @@ class Settings:
     exports_dir: Path = field(default_factory=_default_exports_dir)
     # Folderul administrat în care se copiază fișierele trase în Bibliotecă (drag & drop).
     uploads_dir: Path = field(default_factory=_default_uploads_dir)
+    # Interfața compilată (`npm run build`); servită de backend doar dacă există (pe server).
+    frontend_dir: Path = field(default_factory=_default_frontend_dir)
     # Formatele pe care le scanează biblioteca.
     audio_extensions: frozenset[str] = frozenset({".mp3", ".flac", ".wav", ".aif", ".aiff", ".m4a"})
     # Fișierele mai scurte (sample-uri, jingle-uri) nu intră în bibliotecă.

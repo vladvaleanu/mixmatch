@@ -10,6 +10,8 @@ dependencies = [
     "alembic>=1.14",
     "mutagen>=1.47",
     "python-multipart>=0.0.20",
+    "essentia>=2.1b6.dev1389",
+    "numpy",
 ]
 
 [project.optional-dependencies]

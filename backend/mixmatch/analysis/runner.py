@@ -6,6 +6,7 @@ analizei, jobul le ia și pe ele înainte să se termine.
 """
 
 import logging
+import multiprocessing
 import threading
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -21,6 +22,10 @@ from mixmatch.db.models import BeatGridRow, JobKind, Track, Waveform, utcnow
 from mixmatch.jobs import JobQueue
 
 log = logging.getLogger(__name__)
+
+# Procesele de analiză pornesc cu `spawn` peste tot (implicit pe macOS). Pe Linux, `fork` dintr-un
+# proces cu fire (serverul, coada de joburi) poate bloca procesul copil.
+_MP_CONTEXT = multiprocessing.get_context("spawn")
 
 _start_lock = threading.Lock()
 # Dacă un job de analiză rulează în acest proces. Starea din `jobs` nu ajunge: un job care tocmai
@@ -94,7 +99,10 @@ def analyze_pending(
     global _job_running
     done = 0
     try:
-        with sessions() as session, ProcessPoolExecutor(max_workers=workers) as pool:
+        with (
+            sessions() as session,
+            ProcessPoolExecutor(max_workers=workers, mp_context=_MP_CONTEXT) as pool,
+        ):
             while True:
                 # Decizia de oprire se ia sub același lock ca pornirea unui job nou: o scanare
                 # care se termină acum fie e văzută aici, fie pornește ea un job nou.

@@ -6,7 +6,8 @@ de energie, editor de tranziții cu ascultare și export (WAV/MP3, tracklist, .c
 
 ## Stadiu (2026-11-21)
 - Pașii 0–11 din `docs/plan.md` sunt implementați; fiecare are nota lui în `docs/steps/`, iar
-  deciziile sunt în `docs/decisions.md`.
+  deciziile sunt în `docs/decisions.md`. Pasul 12 (în afara planului) o mută pe server, în Docker
+  (vezi „Pe server” mai jos).
 - **Deschis:** criteriul pasului 8c (grila de beat-uri) cere confirmarea utilizatorului prin
   ascultare: cele 8 tranziții din mixul „Test beatmatch — ascultă tranzițiile” — care sunt pe beat
   fără corecție. Detalii în `docs/steps/08c-grila-de-beaturi.md`.
@@ -22,6 +23,31 @@ make setup   # o dată: mediul Python și pachetele Node
 make dev     # backend pe 8000, interfața pe http://localhost:5173
 make lint && make test && make types
 ```
+
+## Pe server (unde rulează aplicația)
+Aplicația rulează pe serverul de acasă `homebox` (192.168.2.140), în Docker:
+**http://192.168.2.140:8090** (doar din rețeaua locală, fără autentificare).
+
+| Ce | Pe server | În container |
+| --- | --- | --- |
+| Codul (clona git) + `compose.yaml` | `/opt/docker/compose/media/mixmatch` | — |
+| Baza SQLite, cache-ul | `/opt/docker/appdata/mixmatch` (SSD) | `/data` |
+| Muzica | `/srv/media/music` (RAID) | `/music` |
+| Exporturile / importurile (drag & drop) | `/srv/media/music/mixmatch` / `…/Importate` | `/music/mixmatch` |
+
+În aplicație, folderele bibliotecii se adaugă cu căile din container, de exemplu
+`/music/House Set 1` pentru `/srv/media/music/House Set 1`.
+
+```
+ssh valeu@192.168.2.140
+cd /opt/docker/compose/media/mixmatch
+git pull && docker compose up -d --build   # actualizare (rulează și testele frontendului)
+docker compose logs -f                     # jurnalul
+docker build --target test .               # lint + testele backendului, în imagine
+```
+Prima instalare: folderele `/opt/docker/appdata/mixmatch` și `/srv/media/music/mixmatch/Importate` se
+creează înainte (altfel Docker le face ca root), apoi `git clone` în folderul de mai sus și
+`docker compose up -d --build`.
 
 ## Pe un calculator nou
 Codul și documentația sunt în git; **datele nu**:
