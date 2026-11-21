@@ -47,3 +47,11 @@ doar filtrele; stările goale erau o propoziție; nu existau scurtături. Machet
 ## Ce rămâne / atenție
 - Planul (pașii 0–11) e complet. Rămân deschise: confirmarea prin ascultare a pasului 8c și ideea
   „Ascultă mixul” (redarea întregului mix în browser), dacă utilizatorul o vrea.
+
+## Incident descoperit după pas (2026-11-21)
+- Migrarea `0008` (coloana `tracks.added_at`) a recreat tabela `tracks` cu cheile externe active, iar
+  SQLite a șters în cascadă: formele de undă, grilele de beat-uri, piesele din cele două mixuri și setările
+  tranzițiilor. Piesele, analiza de bază, mixurile (ca nume), exporturile și fișierele au rămas.
+- Reparat: migrările rulează fără chei externe active, cu verificare de integritate la final; test de regresie
+  (date la 0007 → upgrade → rândurile rămân). Analiza reface singură formele de undă și grilele lipsă.
+- Conținutul mixului de test se poate reface din tracklistul exportat; conținutul „Mix nou” s-a pierdut.

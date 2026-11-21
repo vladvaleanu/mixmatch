@@ -192,3 +192,22 @@ def wait_until_done(sessions: sessionmaker[Session], job_id: int) -> None:
                 return
         time.sleep(0.05)
     raise AssertionError("Jobul de analiză nu s-a terminat")
+
+
+def test_lost_derived_data_is_rebuilt(sessions: sessionmaker[Session], tmp_path: Path) -> None:
+    """O piesă analizată cu succes, dar fără formă de undă sau grilă, se reanalizează."""
+    with sessions.begin() as session:
+        for name, bpm in (("fara-unda", 124.0), ("esuata", None)):
+            session.add(
+                Track(
+                    path=str(tmp_path / name),
+                    file_hash=name,
+                    title=name,
+                    duration_s=30,
+                    bpm=bpm,
+                    analysis_version=settings.analysis_version,
+                )  # fmt: skip
+            )
+    with sessions() as session:
+        pending = {session.get(Track, i).title for i in pending_track_ids(session)}  # type: ignore[union-attr]
+    assert pending == {"fara-unda"}  # cea eșuată (fără BPM) nu se reia la nesfârșit

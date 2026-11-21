@@ -5,6 +5,8 @@ Cele mai noi sunt sus.
 
 | Data | Decizie | Motiv |
 | --- | --- | --- |
+| 2026-11-21 | Migrările rulează pe o conexiune fără `PRAGMA foreign_keys = ON`, cu `PRAGMA foreign_key_check` la final (oprește dacă rămân referințe rupte) | Migrarea 0008 a recreat `tracks` (batch) și, cu cheile externe active, a șters în cascadă formele de undă, grilele de beat-uri, piesele din mixuri și setările tranzițiilor din baza utilizatorului |
+| 2026-11-21 | O piesă analizată cu succes (are BPM) dar fără formă de undă sau grilă de beat-uri se reanalizează automat | Datele derivate se refac singure dacă se pierd; analizele eșuate (fără BPM) nu se reiau |
 | 2026-11-20 | Scurtături: Spațiu (play/pauză pe piesa selectată), ↑ ↓ sau K J (piesa anterioară/următoare), „/” (caută), „?” (lista); tac cât scrii într-un câmp sau cât e deschisă o fereastră; butonul „?” din bara de sus le face vizibile | Navigare rapidă fără să intre în conflict cu câmpurile |
 | 2026-11-20 | Stări goale cu `ui/EmptyState` (titlu, explicație, o acțiune) pentru Biblioteca goală și Exporturi | Un utilizator nou știe ce are de făcut |
 | 2026-11-20 | Colecțiile țin loc și de tag-uri: o piesă poate fi în oricâte; tabelele `collections` (nume unic) și `collection_tracks`; „Adăugate recent” = sortarea `recent` după `tracks.added_at` (coloană nouă; piesele existente primesc momentul migrării) | Fără două sisteme care fac același lucru |

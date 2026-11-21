@@ -12,7 +12,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
-from sqlalchemy import or_, select
+from sqlalchemy import and_, exists, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from mixmatch.analysis.track import AnalysisResult, analyze_file
@@ -29,7 +29,17 @@ _job_running = False
 
 
 def _needs_analysis():  # type: ignore[no-untyped-def]
-    return or_(Track.analysis_version.is_(None), Track.analysis_version < settings.analysis_version)
+    """Neanalizată, analizată cu o versiune veche, sau analizată cu succes (are BPM) dar fără
+    forma de undă ori grila de beat-uri (date pierdute: se refac singure)."""
+    missing = or_(
+        ~exists().where(Waveform.track_id == Track.id),
+        ~exists().where(BeatGridRow.track_id == Track.id),
+    )
+    return or_(
+        Track.analysis_version.is_(None),
+        Track.analysis_version < settings.analysis_version,
+        and_(Track.bpm.is_not(None), missing),
+    )
 
 
 def pending_track_ids(session: Session) -> list[int]:
